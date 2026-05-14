@@ -17,7 +17,21 @@ Configurazione attuale del portafoglio personale di Marco. Serve a validare l'al
 - **Durata**: 3 anni
 - **Caratteristica**: 4 strumenti, Quote tutte relativamente economiche
 
-## Scenario 2 — "All-equity diversificato"
+## Scenario 2 — "Marco con Gold costoso"
+
+Variante dello Scenario 1 in cui il **Gold** è sostituito con `SGLD.MI` (Invesco Physical Gold), con **Quota** più cara di `GBSE.MI`. Stesso portafoglio e stessi pesi target, ma il vincolo "10% in Gold" diventa molto più difficile da rispettare nelle prime **Iterazioni** → stress sul **Problema Fineco** con la composizione reale di Marco.
+
+| Strumento | Ticker | Peso Target |
+|---|---|---|
+| World ex-US | `EXUS.DE` | 40.50% |
+| S&P 500 | `IUSE.MI` | 31.50% |
+| Emerging Markets | `XMME.DE` | 18.00% |
+| Gold (costoso) | `SGLD.MI` | 10.00% |
+
+- **Budget**: 400€/mese
+- **Durata**: 3 anni
+
+## Scenario 3 — "All-equity diversificato"
 
 Profilo di un utente puramente azionario con portafoglio ampio. Verifica che l'algoritmo si comporti bene anche quando il **Problema Fineco** non è dominante.
 
@@ -33,20 +47,6 @@ Profilo di un utente puramente azionario con portafoglio ampio. Verifica che l'a
 - **Caratteristica**: spazio di ricerca più ampio, Quote economiche
 
 (Ticker da scegliere in fase implementativa tra ETF UCITS rappresentativi.)
-
-## Scenario 3 — "Marco con Gold costoso"
-
-Variante dello Scenario 1 in cui il **Gold** è sostituito con `SGLD.MI` (Invesco Physical Gold), con **Quota** più cara di `GBSE.MI`. Stesso portafoglio e stessi pesi target, ma il vincolo "10% in Gold" diventa molto più difficile da rispettare nelle prime **Iterazioni** → stress sul **Problema Fineco** con la composizione reale di Marco.
-
-| Strumento | Ticker | Peso Target |
-|---|---|---|
-| World ex-US | `EXUS.DE` | 40.50% |
-| S&P 500 | `IUSE.MI` | 31.50% |
-| Emerging Markets | `XMME.DE` | 18.00% |
-| Gold (costoso) | `SGLD.MI` | 10.00% |
-
-- **Budget**: 400€/mese
-- **Durata**: 3 anni
 
 ## Scenario 4 — "Strumenti costosi" (stress test)
 
