@@ -12,6 +12,18 @@ _Avoid_: titolo, asset, ticker
 Unità minima indivisibile di uno **Strumento**. L'algoritmo decide quante quote acquistare di ciascuno.
 _Avoid_: share, unit, frazione
 
+**Quote Detenute**:
+Le quote di uno **Strumento** possedute prima di un'**Iterazione**. Input dell'algoritmo.
+_Avoid_: quote iniziali, quote precedenti
+
+**Quote Acquistate**:
+Le quote di uno **Strumento** acquistate durante un'**Iterazione**. Output principale dell'algoritmo.
+_Avoid_: quote comprate, ordine
+
+**Quote Finali**:
+Le quote di uno **Strumento** possedute a fine **Iterazione**: `Quote Detenute + Quote Acquistate`. Non sono un output diretto dell'algoritmo — si derivano.
+_Avoid_: quote totali, quote risultanti
+
 **Portafoglio**:
 L'insieme degli **Strumenti** già posseduti, ciascuno con la quantità di **Quote** detenute e il prezzo corrente.
 _Avoid_: account, holdings

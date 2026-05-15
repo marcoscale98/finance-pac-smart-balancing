@@ -66,35 +66,43 @@ export function formattaOutput(
   // Dati riga per ogni strumento
   const datiRighe = output.acquisti.map((acquisto, i) => {
     const s = portafoglio[i]!;
+    const quoteFinali = s.quoteDetenute + acquisto.quoteAcquistare;
     const costo = acquisto.quoteAcquistare * s.prezzoCorrente;
-    const valoreEff = (s.quoteDetenute + acquisto.quoteAcquistare) * s.prezzoCorrente;
-    const deviazioneStr = Math.abs(valoreEff - s.pesoTarget * valoreFinale);
+    const valoreEff = quoteFinali * s.prezzoCorrente;
+    const deviazione = Math.abs(valoreEff - s.pesoTarget * valoreFinale);
     return {
       ticker: acquisto.ticker,
-      quote: String(acquisto.quoteAcquistare),
+      detenute: String(s.quoteDetenute),
+      acquistate: String(acquisto.quoteAcquistare),
+      finali: String(quoteFinali),
       costo: `${costo.toFixed(2)}€`,
-      deviazione: `${deviazioneStr.toFixed(2)}€`,
+      deviazione: `${deviazione.toFixed(2)}€`,
     };
   });
 
   // Larghezze colonne (dinamiche sul contenuto)
   const w = {
     strumento: Math.max("Strumento".length, ...datiRighe.map((r) => r.ticker.length)),
-    quote: Math.max("Quote".length, ...datiRighe.map((r) => r.quote.length)),
+    detenute: Math.max("Detenute".length, ...datiRighe.map((r) => r.detenute.length)),
+    acquistate: Math.max("Acquistate".length, ...datiRighe.map((r) => r.acquistate.length)),
+    finali: Math.max("Finali".length, ...datiRighe.map((r) => r.finali.length)),
     costo: Math.max("Costo".length, ...datiRighe.map((r) => r.costo.length)),
     deviazione: Math.max("D_€".length, ...datiRighe.map((r) => r.deviazione.length)),
   };
 
   const sep = (n: number) => "-".repeat(n);
   const header =
-    `${"Strumento".padEnd(w.strumento)} | ${"Quote".padEnd(w.quote)} | ` +
-    `${"Costo".padEnd(w.costo)} | ${"D_€".padEnd(w.deviazione)}`;
+    `${"Strumento".padEnd(w.strumento)} | ${"Detenute".padStart(w.detenute)} | ` +
+    `${"Acquistate".padStart(w.acquistate)} | ${"Finali".padStart(w.finali)} | ` +
+    `${"Costo".padStart(w.costo)} | ${"D_€".padStart(w.deviazione)}`;
   const separatore =
-    `${sep(w.strumento)}-|-${sep(w.quote)}-|-${sep(w.costo)}-|-${sep(w.deviazione)}`;
+    `${sep(w.strumento)}-|-${sep(w.detenute)}-|-${sep(w.acquistate)}-|-` +
+    `${sep(w.finali)}-|-${sep(w.costo)}-|-${sep(w.deviazione)}`;
 
   const righeTabella = datiRighe.map(
     (r) =>
-      `${r.ticker.padEnd(w.strumento)} | ${r.quote.padStart(w.quote)} | ` +
+      `${r.ticker.padEnd(w.strumento)} | ${r.detenute.padStart(w.detenute)} | ` +
+      `${r.acquistate.padStart(w.acquistate)} | ${r.finali.padStart(w.finali)} | ` +
       `${r.costo.padStart(w.costo)} | ${r.deviazione.padStart(w.deviazione)}`,
   );
 
