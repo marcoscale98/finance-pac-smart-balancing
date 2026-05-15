@@ -5,10 +5,12 @@
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "cli": "tsx src/cli/index.ts"
   },
   "devDependencies": {
     "@types/node": "^22.15.17",
+    "tsx": "^4.22.0",
     "typescript": "^5.8.3",
     "vitest": "^3.1.3"
   },
