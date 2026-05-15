@@ -68,42 +68,58 @@ export function formattaOutput(
     const s = portafoglio[i]!;
     const quoteFinali = s.quoteDetenute + acquisto.quoteAcquistare;
     const costo = acquisto.quoteAcquistare * s.prezzoCorrente;
-    const valoreEff = quoteFinali * s.prezzoCorrente;
-    const deviazione = Math.abs(valoreEff - s.pesoTarget * valoreFinale);
+    const valoreFin = quoteFinali * s.prezzoCorrente;
+    const devEuro = Math.abs(valoreFin - s.pesoTarget * valoreFinale);
+    const pesoFin = valoreFinale > 0 ? valoreFin / valoreFinale : 0;
+    const devPerc = Math.abs(pesoFin - s.pesoTarget);
     return {
       ticker: acquisto.ticker,
       detenute: String(s.quoteDetenute),
-      acquistate: String(acquisto.quoteAcquistare),
+      acquistateCosto: `${acquisto.quoteAcquistare} (${costo.toFixed(2)}€)`,
       finali: String(quoteFinali),
-      costo: `${costo.toFixed(2)}€`,
-      deviazione: `${deviazione.toFixed(2)}€`,
+      pesoTarget: `${(s.pesoTarget * 100).toFixed(2)}%`,
+      pesoFinale: `${(pesoFin * 100).toFixed(2)}%`,
+      dev: `${devEuro.toFixed(2)}€ (${(devPerc * 100).toFixed(1)}%)`,
     };
   });
 
   // Larghezze colonne (dinamiche sul contenuto)
+  const HDR = {
+    strumento: "Strumento",
+    detenute: "Quote Detenute",
+    acquistateCosto: "Quote Acquistate (Costo)",
+    finali: "Quote Finali",
+    pesoTarget: "Peso Target",
+    pesoFinale: "Peso Finale",
+    dev: "Dev",
+  };
   const w = {
-    strumento: Math.max("Strumento".length, ...datiRighe.map((r) => r.ticker.length)),
-    detenute: Math.max("Detenute".length, ...datiRighe.map((r) => r.detenute.length)),
-    acquistate: Math.max("Acquistate".length, ...datiRighe.map((r) => r.acquistate.length)),
-    finali: Math.max("Finali".length, ...datiRighe.map((r) => r.finali.length)),
-    costo: Math.max("Costo".length, ...datiRighe.map((r) => r.costo.length)),
-    deviazione: Math.max("D_€".length, ...datiRighe.map((r) => r.deviazione.length)),
+    strumento: Math.max(HDR.strumento.length, ...datiRighe.map((r) => r.ticker.length)),
+    detenute: Math.max(HDR.detenute.length, ...datiRighe.map((r) => r.detenute.length)),
+    acquistateCosto: Math.max(HDR.acquistateCosto.length, ...datiRighe.map((r) => r.acquistateCosto.length)),
+    finali: Math.max(HDR.finali.length, ...datiRighe.map((r) => r.finali.length)),
+    pesoTarget: Math.max(HDR.pesoTarget.length, ...datiRighe.map((r) => r.pesoTarget.length)),
+    pesoFinale: Math.max(HDR.pesoFinale.length, ...datiRighe.map((r) => r.pesoFinale.length)),
+    dev: Math.max(HDR.dev.length, ...datiRighe.map((r) => r.dev.length)),
   };
 
   const sep = (n: number) => "-".repeat(n);
+  const col = (s: string, n: number) => s.padStart(n);
   const header =
-    `${"Strumento".padEnd(w.strumento)} | ${"Detenute".padStart(w.detenute)} | ` +
-    `${"Acquistate".padStart(w.acquistate)} | ${"Finali".padStart(w.finali)} | ` +
-    `${"Costo".padStart(w.costo)} | ${"D_€".padStart(w.deviazione)}`;
+    `${HDR.strumento.padEnd(w.strumento)} | ${col(HDR.detenute, w.detenute)} | ` +
+    `${col(HDR.acquistateCosto, w.acquistateCosto)} | ${col(HDR.finali, w.finali)} | ` +
+    `${col(HDR.pesoTarget, w.pesoTarget)} | ${col(HDR.pesoFinale, w.pesoFinale)} | ` +
+    `${col(HDR.dev, w.dev)}`;
   const separatore =
-    `${sep(w.strumento)}-|-${sep(w.detenute)}-|-${sep(w.acquistate)}-|-` +
-    `${sep(w.finali)}-|-${sep(w.costo)}-|-${sep(w.deviazione)}`;
+    `${sep(w.strumento)}-|-${sep(w.detenute)}-|-${sep(w.acquistateCosto)}-|-` +
+    `${sep(w.finali)}-|-${sep(w.pesoTarget)}-|-${sep(w.pesoFinale)}-|-${sep(w.dev)}`;
 
   const righeTabella = datiRighe.map(
     (r) =>
-      `${r.ticker.padEnd(w.strumento)} | ${r.detenute.padStart(w.detenute)} | ` +
-      `${r.acquistate.padStart(w.acquistate)} | ${r.finali.padStart(w.finali)} | ` +
-      `${r.costo.padStart(w.costo)} | ${r.deviazione.padStart(w.deviazione)}`,
+      `${r.ticker.padEnd(w.strumento)} | ${col(r.detenute, w.detenute)} | ` +
+      `${col(r.acquistateCosto, w.acquistateCosto)} | ${col(r.finali, w.finali)} | ` +
+      `${col(r.pesoTarget, w.pesoTarget)} | ${col(r.pesoFinale, w.pesoFinale)} | ` +
+      `${col(r.dev, w.dev)}`,
   );
 
   // Totali con € allineati

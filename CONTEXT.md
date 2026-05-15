@@ -35,14 +35,29 @@ _Avoid_: target, ideal state, mix
 **Peso Target** (`t_i`):
 La percentuale assegnata a un singolo **Strumento** nell'**Allocazione Target**, espressa come frazione tra 0 e 1.
 
+**Peso Finale**:
+La percentuale che un **Strumento** occupa nel **Portafoglio** a fine **Iterazione**: `Valore Finale Strumento / Valore Finale Portafoglio`. Si confronta con il **Peso Target** per valutare quanto l'**Iterazione** si sia avvicinata all'**Allocazione Target**.
+_Avoid_: peso effettivo, peso attuale, peso reale, allocazione effettiva
+
 **Budget** (`B`):
 L'importo massimo in euro che l'algoritmo può spendere in una singola esecuzione. Vincolo duro: non si sfora mai.
 
 **Iterazione**:
 Una singola esecuzione dell'algoritmo, corrispondente tipicamente a un acquisto mensile. Riceve **Portafoglio** + **Budget** + **Allocazione Target**, restituisce le **Quote** da comprare per ogni **Strumento**. Le **Iterazioni** sono indipendenti: il **Budget Non Speso** non viene riportato all'**Iterazione** successiva.
 
+**Valore Finale**:
+Il valore in euro di uno **Strumento** a fine **Iterazione**: `Quote Finali × Prezzo Corrente`. Il **Valore Finale Portafoglio** è la somma dei Valori Finali di tutti gli Strumenti.
+_Avoid_: valore effettivo, valore attuale
+
+**Valore Target**:
+Il valore in euro che uno **Strumento** dovrebbe avere a fine **Iterazione** per rispettare esattamente il suo **Peso Target**: `Peso Target × Valore Finale Portafoglio`.
+_Avoid_: valore ideale, valore obiettivo
+
 **Deviazione** (`D_€`):
-Lo scostamento totale in euro tra il **Portafoglio** dopo gli acquisti e l'**Allocazione Target** applicata al portafoglio totale. Misurata in euro, non in percentuale.
+Lo scostamento in euro tra il **Valore Finale** di uno **Strumento** e il suo **Valore Target**: `|Valore Finale − Valore Target|`. Senza qualificatori, "Deviazione" si intende sempre in euro.
+
+**Deviazione Percentuale** (`D_%`):
+La **Deviazione** espressa in punti percentuali: `D_€ / Valore Finale Portafoglio`. Equivale a `|Peso Finale − Peso Target|`.
 
 **Budget Non Speso** (`U`):
 La parte del **Budget** che l'algoritmo decide di non investire in questa **Iterazione**. `U = B − speso`.
@@ -103,4 +118,4 @@ _Avoid_: `PricePoint`, `HistoricalEntry`.
 ## Flagged ambiguities
 
 - "Budget" inizialmente è stato discusso sia come "tetto massimo" sia come "obiettivo di spesa" — risolto: è un **vincolo duro** (mai sforare), e l'algoritmo è incentivato a spendere il più possibile tramite il termine `U` nella funzione di costo.
-- "Deviazione" è stata definita in euro e non in percentuale — risolto: misurata sempre in euro per parlare la stessa lingua del **Budget Non Speso** ed evitare normalizzazioni arbitrarie.
+- "Deviazione" senza qualificatori si intende sempre in euro (**D_€**). La variante percentuale esiste ed è chiamata esplicitamente **Deviazione Percentuale** (**D_%**), equivalente a `|Peso Finale − Peso Target|`.
