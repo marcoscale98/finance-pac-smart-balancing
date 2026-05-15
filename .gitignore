@@ -14,3 +14,8 @@
 # Node
 node_modules/
 dist/
+
+# Agent skills (installate localmente, non versionare)
+.claude/skills/
+.agent/skills/
+.agents/skills/
