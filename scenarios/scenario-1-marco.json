@@ -1,0 +1,10 @@
+{
+  "strumenti": [
+    { "ticker": "EXUS.DE", "pesoTarget": 0.405, "quoteDetenute": 0 },
+    { "ticker": "IUSE.MI", "pesoTarget": 0.315, "quoteDetenute": 0 },
+    { "ticker": "XMME.DE", "pesoTarget": 0.180, "quoteDetenute": 0 },
+    { "ticker": "GBSE.MI", "pesoTarget": 0.100, "quoteDetenute": 0 }
+  ],
+  "budget": 400,
+  "alfa": 0.5
+}
