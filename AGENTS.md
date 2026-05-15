@@ -4,6 +4,14 @@
 - Use Context7 MCP server for Libraries docs
 - Use Deepwiki for querying Github codebases of famous open source projects
 
+## Setup
+
+Dopo aver clonato il repo o creato un nuovo worktree, installare le skill locali:
+
+```bash
+npx skills experimental_install
+```
+
 ## Agent skills
 
 ### Issue tracker
