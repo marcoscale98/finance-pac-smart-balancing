@@ -35,27 +35,27 @@ Variante dello Scenario 1 in cui il **Gold** è sostituito con `SGLD.MI` (Invesc
 
 Profilo di un utente puramente azionario con portafoglio ampio. Verifica che l'algoritmo si comporti bene anche quando il **Problema Fineco** non è dominante.
 
-| Strumento | Peso Target |
-|---|---|
-| S&P 500 | 50% |
-| World ex-US | 25% |
-| Emerging Markets | 15% |
-| Europe | 10% |
+| Strumento | Ticker | Peso Target |
+|---|---|---|
+| S&P 500 | `IUSE.MI` | 50% |
+| World ex-US | `EXUS.DE` | 25% |
+| Emerging Markets | `XMME.DE` | 15% |
+| Europe | `EXSA.DE` | 10% |
 
 - **Budget**: 300€/mese
 - **Durata**: 5 anni
 - **Caratteristica**: spazio di ricerca più ampio, Quote economiche
 
-(Ticker da scegliere in fase implementativa tra ETF UCITS rappresentativi.)
-
 ## Scenario 4 — "Strumenti costosi" (stress test)
 
 Portafoglio composto solo da ETF con **Quota** sopra i 200€. Esaspera il **Problema Fineco**: ogni acquisto pesa tanto sul **Budget**, il vincolo di interezza delle **Quote** è severo.
 
-- 2-3 strumenti, tutti con Quota > 200€
-- **Allocazione Target**: 60% / 30% / 10%
+| Strumento | Ticker | Peso Target | Quota (mag 2026) |
+|---|---|---|---|
+| Invesco Nasdaq 100 | `EQQQ.DE` | 60% | ~613€ |
+| WisdomTree Physical Gold | `PHAU.MI` | 30% | ~363€ |
+| Amundi Core STOXX Europe 600 | `MEUD.MI` | 10% | ~298€ |
+
 - **Budget**: 500€/mese
 - **Durata**: 2 anni
-- **Caratteristica**: limite teorico dell'algoritmo
-
-(Ticker da scegliere in fase implementativa.)
+- **Caratteristica**: limite teorico dell'algoritmo — ogni acquisto pesa molto, il vincolo di interezza delle Quote è severo
