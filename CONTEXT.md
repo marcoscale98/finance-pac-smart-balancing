@@ -78,6 +78,16 @@ Il comportamento adattivo (privilegiare spendere quando il portafoglio è piccol
 > **Dev:** "Se l'**Allocazione Target** prevede 10% di Gold ma una **Quota** di Gold costa più del 10% del **Budget**, l'algoritmo cosa fa?"
 > **Marco:** "Compra zero Quote di Gold in quella **Iterazione** e accetta una **Deviazione** maggiore su Gold, perché l'altra opzione sarebbe sforare la percentuale in modo grossolano. Nelle **Iterazioni** successive, quando il **Portafoglio** crescerà, la stessa quota di Gold peserà meno e tornerà acquistabile senza creare squilibri."
 
+**Adapter Prezzi**:
+Modulo separato e sostituibile che espone due funzioni al resto del sistema. Non contiene logica di business — è un adattatore puro verso la sorgente dati esterna (`yahoo-finance2`). Cambiare sorgente dati richiede solo modificare questo modulo.
+- `prezzoCorrente(ticker)` — prezzo corrente di uno **Strumento**; usata dalla **CLI di Validazione**.
+- `prezziPerDate(ticker, date[])` — dato un array di date specifiche (es. una per ogni mese del **Simulatore**), restituisce il prezzo di ciascuna. Internamente interroga la sorgente sul range `[min, max]` e mappa il giorno più vicino per ogni data richiesta.
+_Avoid_: `getCurrentPrice`, `getHistoricalPrices`, serie storica generica.
+
+**Quotazione**:
+Una coppia `{ data: Date; prezzo: number }` — il prezzo di uno **Strumento** in un determinato giorno. Unità restituita da `prezziPerDate`.
+_Avoid_: `PricePoint`, `HistoricalEntry`.
+
 ## Flagged ambiguities
 
 - "Budget" inizialmente è stato discusso sia come "tetto massimo" sia come "obiettivo di spesa" — risolto: è un **vincolo duro** (mai sforare), e l'algoritmo è incentivato a spendere il più possibile tramite il termine `U` nella funzione di costo.
