@@ -61,23 +61,33 @@ describe("formattaOutput", () => {
     deviazione: 8.5,
   };
 
-  it("contiene header tabella con colonne Detenute, Acquistate, Finali, Costo, D_€", () => {
+  it("contiene header tabella con tutte le colonne concordate", () => {
     const testo = formattaOutput(output, portafoglio);
 
     expect(testo).toContain("Strumento");
-    expect(testo).toContain("Detenute");
-    expect(testo).toContain("Acquistate");
-    expect(testo).toContain("Finali");
-    expect(testo).toContain("Costo");
-    expect(testo).toContain("D_€");
+    expect(testo).toContain("Quote Detenute");
+    expect(testo).toContain("Quote Acquistate (Costo)");
+    expect(testo).toContain("Quote Finali");
+    expect(testo).toContain("Peso Target");
+    expect(testo).toContain("Peso Finale");
+    expect(testo).toContain("Dev");
     expect(testo).toContain("EXUS.DE");
     expect(testo).toContain("IUSE.MI");
-    // quote acquistate (3 e 2) compaiono nella colonna Acquistate
-    expect(testo).toMatch(/\|\s*3\s*\|/);
-    expect(testo).toMatch(/\|\s*2\s*\|/);
-    // quote finali = detenute(0) + acquistate → stesse delle acquistate nel test (quoteDetenute=0)
-    expect(testo).toMatch(/\|\s*3\s*\|/);
-    expect(testo).toMatch(/\|\s*2\s*\|/);
+  });
+
+  it("celle combinate: quote acquistate con costo tra parentesi", () => {
+    const testo = formattaOutput(output, portafoglio);
+    // 3 quote × 95€ = 285.00€
+    expect(testo).toContain("3 (285.00€)");
+    // 2 quote × 56€ = 112.00€
+    expect(testo).toContain("2 (112.00€)");
+  });
+
+  it("Dev mostra D_€ e D_% nella stessa cella", () => {
+    const testo = formattaOutput(output, portafoglio);
+    // la cella Dev deve contenere sia € che %
+    const righeConDev = testo.split("\n").filter((r) => r.includes("€") && r.includes("%") && !r.includes("Peso"));
+    expect(righeConDev.length).toBeGreaterThan(0);
   });
 
   it("contiene i 3 totali con simbolo € allineato", () => {
