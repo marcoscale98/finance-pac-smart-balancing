@@ -61,16 +61,21 @@ describe("formattaOutput", () => {
     deviazione: 8.5,
   };
 
-  it("contiene header tabella, ticker e quote per ogni strumento", () => {
+  it("contiene header tabella con colonne Detenute, Acquistate, Finali, Costo, D_€", () => {
     const testo = formattaOutput(output, portafoglio);
 
     expect(testo).toContain("Strumento");
-    expect(testo).toContain("Quote");
+    expect(testo).toContain("Detenute");
+    expect(testo).toContain("Acquistate");
+    expect(testo).toContain("Finali");
     expect(testo).toContain("Costo");
     expect(testo).toContain("D_€");
     expect(testo).toContain("EXUS.DE");
     expect(testo).toContain("IUSE.MI");
-    // le quote compaiono come numeri nella colonna Quote
+    // quote acquistate (3 e 2) compaiono nella colonna Acquistate
+    expect(testo).toMatch(/\|\s*3\s*\|/);
+    expect(testo).toMatch(/\|\s*2\s*\|/);
+    // quote finali = detenute(0) + acquistate → stesse delle acquistate nel test (quoteDetenute=0)
     expect(testo).toMatch(/\|\s*3\s*\|/);
     expect(testo).toMatch(/\|\s*2\s*\|/);
   });
