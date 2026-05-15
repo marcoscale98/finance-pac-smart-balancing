@@ -17,6 +17,7 @@ export async function prezziPerDate(ticker: string, date: Date[]): Promise<Quota
 
   const da = new Date(Math.min(...date.map((d) => d.getTime())));
   const a = new Date(Math.max(...date.map((d) => d.getTime())));
+  a.setDate(a.getDate() + 7);
 
   const risultato = await yf.chart(ticker, {
     period1: da,
@@ -27,11 +28,11 @@ export async function prezziPerDate(ticker: string, date: Date[]): Promise<Quota
   const candele = risultato.quotes;
 
   return date.map((dataRichiesta) => {
-    const piuVicina = candele.reduce((migliore, riga) => {
-      const distMigliore = Math.abs(migliore.date.getTime() - dataRichiesta.getTime());
-      const distRiga = Math.abs(riga.date.getTime() - dataRichiesta.getTime());
-      return distRiga < distMigliore ? riga : migliore;
-    });
+    const candidati = candele.filter((r) => r.date >= dataRichiesta);
+    if (candidati.length === 0) {
+      throw new RangeError(`nessuna quotazione disponibile per ${dataRichiesta.toISOString()}`);
+    }
+    const piuVicina = candidati.reduce((min, r) => (r.date < min.date ? r : min));
     return { data: piuVicina.date, prezzo: piuVicina.close! };
   });
 }
