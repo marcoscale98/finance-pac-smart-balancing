@@ -1,6 +1,8 @@
 ## Mandatory Rules
 
 - Code Language: Italian
+- Use Context7 MCP server for Libraries docs
+- Use Deepwiki for querying Github codebases of famous open source projects
 
 ## Agent skills
 
