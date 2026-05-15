@@ -1,3 +1,7 @@
+## Mandatory Rules
+
+- Code Language: Italian
+
 ## Agent skills
 
 ### Issue tracker
