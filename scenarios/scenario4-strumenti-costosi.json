@@ -1,0 +1,12 @@
+{
+  "strumenti": [
+    { "ticker": "EQQQ.DE", "pesoTarget": 0.60, "quoteDetenute": 0 },
+    { "ticker": "PHAU.MI", "pesoTarget": 0.30, "quoteDetenute": 0 },
+    { "ticker": "MEUD.MI", "pesoTarget": 0.10, "quoteDetenute": 0 }
+  ],
+  "budget": 500,
+  "alfa": 0.5,
+  "grigliaDiAlfa": [0.25, 0.5, 0.75],
+  "durataInMesi": 24,
+  "dataInizio": "2024-01-01"
+}

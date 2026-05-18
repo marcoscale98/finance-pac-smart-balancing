@@ -6,7 +6,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "cli": "tsx src/cli/index.ts"
+    "cli": "tsx src/cli/index.ts",
+    "simulate:all": "tsx src/simula-tutti.ts"
   },
   "devDependencies": {
     "@types/node": "^22.15.17",
