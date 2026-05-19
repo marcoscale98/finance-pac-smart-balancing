@@ -20,4 +20,4 @@ dist/
 .agent/skills/
 .agents/skills/
 
-./output/
+output/
