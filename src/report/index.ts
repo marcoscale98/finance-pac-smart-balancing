@@ -38,10 +38,11 @@ function dataset(
   });
 }
 
-function grafico(id: string, titolo: string, datasetsJs: string, labelY: string): string {
+function grafico(id: string, titolo: string, datasetsJs: string, labelY: string, didascalia?: string): string {
   return `
     <div class="chart-wrap">
       <h2>${titolo}</h2>
+      ${didascalia ? `<p class="didascalia">${didascalia}</p>` : ""}
       <canvas id="${id}"></canvas>
     </div>
     <script>
@@ -95,12 +96,23 @@ function buildHtml(result: SimulationResult): string {
     .join(",\n");
   const dsBudget = [dsTeoricoBase, dsEffettivi].join(",\n");
 
-  // Grafico 3: Deviazione media
+  // Grafico 3: Deviazione media in euro
   const dsDeviazione = result
     .map((serie, i) =>
       dataset(
         `α = ${serie.alfa}`,
         serie.mesi.map((m) => Math.round(m.deviazioneMedia * 100) / 100),
+        COLORI[i % COLORI.length]!,
+      ),
+    )
+    .join(",\n");
+
+  // Grafico 4: Deviazione media percentuale
+  const dsDeviazionePerc = result
+    .map((serie, i) =>
+      dataset(
+        `α = ${serie.alfa}`,
+        serie.mesi.map((m) => Math.round(m.deviazioneMediaPercentuale * 10000) / 100),
         COLORI[i % COLORI.length]!,
       ),
     )
@@ -125,7 +137,8 @@ function buildHtml(result: SimulationResult): string {
     .leggenda dd { color: #475569; }
     .chart-wrap { background: #fff; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem;
                   box-shadow: 0 1px 3px rgba(0,0,0,.1); max-width: 900px; }
-    h2 { font-size: 1.1rem; margin-bottom: 1rem; color: #475569; }
+    h2 { font-size: 1.1rem; margin-bottom: 0.5rem; color: #475569; }
+    .didascalia { font-size: 0.82rem; color: #94a3b8; margin-bottom: 1rem; font-style: italic; }
   </style>
 </head>
 <body>
@@ -142,7 +155,8 @@ function buildHtml(result: SimulationResult): string {
   <script>const ETICHETTE = ${JSON.stringify(labels)};</script>
   ${grafico("g1", "Valore del portafoglio nel tempo", dsValore, "€")}
   ${grafico("g2", "Budget cumulativo: teorico vs speso", dsBudget, "€")}
-  ${grafico("g3", "Deviazione media dai target nel tempo", dsDeviazione, "€")}
+  ${grafico("g3", "Deviazione media dai target nel tempo (€)", dsDeviazione, "€ (media per strumento)", "Scostamento medio in euro tra il Valore Finale e il Valore Target di ciascuno strumento. Il Valore Target è la quota del portafoglio che lo strumento dovrebbe occupare secondo l'Allocazione Target (es. 40% World, 30% S&amp;P500…).")}
+  ${grafico("g4", "Deviazione media dai target nel tempo (%)", dsDeviazionePerc, "% (media per strumento)", "Stesso scostamento del grafico precedente, espresso in punti percentuali rispetto al valore totale del portafoglio — equivale alla differenza media tra Peso Finale e Peso Target di ciascuno strumento.")}
 </body>
 </html>`;
 }
