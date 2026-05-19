@@ -141,7 +141,7 @@ function buildHtml(result: SimulationResult): string {
   </div>
   <script>const ETICHETTE = ${JSON.stringify(labels)};</script>
   ${grafico("g1", "Valore del portafoglio nel tempo", dsValore, "€")}
-  ${grafico("g2", "Budget cumulativo: teorico vs effettivo", dsBudget, "€")}
+  ${grafico("g2", "Budget cumulativo: teorico vs speso", dsBudget, "€")}
   ${grafico("g3", "Deviazione media dai target nel tempo", dsDeviazione, "€")}
 </body>
 </html>`;
