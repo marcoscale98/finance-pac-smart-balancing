@@ -19,3 +19,5 @@ dist/
 .claude/skills/
 .agent/skills/
 .agents/skills/
+
+./output/
