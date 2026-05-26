@@ -65,7 +65,7 @@ describe("formattaOutput", () => {
     const testo = formattaOutput(output, portafoglio);
 
     expect(testo).toContain("Strumento");
-    expect(testo).toContain("Quote Detenute");
+    expect(testo).toContain("Quote Attuali");
     expect(testo).toContain("Quote Acquistate (Costo)");
     expect(testo).toContain("Quote Finali");
     expect(testo).toContain("Peso Target");

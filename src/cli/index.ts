@@ -100,7 +100,7 @@ export function formattaOutput(
   // Larghezze colonne (dinamiche sul contenuto)
   const HDR = {
     strumento: "Strumento",
-    detenute: "Quote Detenute",
+    detenute: "Quote Attuali",
     acquistateCosto: "Quote Acquistate (Costo)",
     finali: "Quote Finali",
     pesoTarget: "Peso Target",
