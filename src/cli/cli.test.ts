@@ -61,22 +61,19 @@ describe("formattaOutput", () => {
     deviazione: 8.5,
   };
 
-  it("contiene header tabella con tutte le colonne concordate", () => {
-    const testo = formattaOutput(output, portafoglio);
+  // --- Tabella Quote ---
 
+  it("Tabella Quote: header contiene Strumento, Quote Attuali, Acquistate (Costo), Quote Finali", () => {
+    const testo = formattaOutput(output, portafoglio);
     expect(testo).toContain("Strumento");
     expect(testo).toContain("Quote Attuali");
-    expect(testo).toContain("Quote Acquistate (Costo)");
+    expect(testo).toContain("Acquistate (Costo)");
     expect(testo).toContain("Quote Finali");
-    expect(testo).toContain("Peso Target");
-    expect(testo).toContain("Peso Finale");
-    expect(testo).toContain("Dev attuale");
-    expect(testo).toContain("Dev finale");
     expect(testo).toContain("EXUS.DE");
     expect(testo).toContain("IUSE.MI");
   });
 
-  it("celle combinate: quote acquistate con costo tra parentesi", () => {
+  it("Tabella Quote: celle combinate — quote acquistate con costo tra parentesi", () => {
     const testo = formattaOutput(output, portafoglio);
     // 3 quote × 95€ = 285.00€
     expect(testo).toContain("3 (285.00€)");
@@ -84,10 +81,52 @@ describe("formattaOutput", () => {
     expect(testo).toContain("2 (112.00€)");
   });
 
-  it("Dev attuale mostra valore calcolato quando il portafoglio ha quote esistenti", () => {
+  it("Tabella Quote: footer contiene Totale speso e Budget Non Speso", () => {
+    const testo = formattaOutput(output, portafoglio);
+    expect(testo).toContain("Totale speso:");
+    expect(testo).toContain("Budget Non Speso");
+  });
+
+  // --- Tabella Pesi ---
+
+  it("Tabella Pesi: header contiene Peso Attuale, Peso Target, Peso Finale", () => {
+    const testo = formattaOutput(output, portafoglio);
+    expect(testo).toContain("Peso Attuale");
+    expect(testo).toContain("Peso Target");
+    expect(testo).toContain("Peso Finale");
+  });
+
+  it("Tabella Pesi: Peso Attuale mostra n/a quando portafoglio vale 0€", () => {
+    const testo = formattaOutput(output, portafoglio);
+    // Estrae la sezione della Tabella Pesi (tra l'header "Peso Attuale" e la riga vuota successiva)
+    const righe = testo.split("\n");
+    const inizioPesi = righe.findIndex((r) => r.includes("Peso Attuale"));
+    const sezioneP = righe.slice(inizioPesi + 2); // salta header e separatore
+    const righeDatiPesi = sezioneP.slice(0, portafoglio.length);
+    expect(righeDatiPesi.every((r) => r.includes("n/a"))).toBe(true);
+  });
+
+  it("Tabella Pesi: non contiene righe di totale proprie", () => {
+    const testo = formattaOutput(output, portafoglio);
+    // i pesi sommano sempre a 100% → nessun totale nella Tabella Pesi
+    // verifica indiretta: "Totale speso" e "Deviazione" non appaiono nella sezione Pesi
+    // (test di alto livello: l'output non ha "Totale pesi" o simile)
+    expect(testo).not.toContain("Totale pesi");
+    expect(testo).not.toContain("Peso totale");
+  });
+
+  // --- Tabella Deviazioni ---
+
+  it("Tabella Deviazioni: header contiene Dev Attuale e Dev Finale", () => {
+    const testo = formattaOutput(output, portafoglio);
+    expect(testo).toContain("Dev Attuale");
+    expect(testo).toContain("Dev Finale");
+  });
+
+  it("Tabella Deviazioni: Dev Attuale mostra valore calcolato quando portafoglio ha quote esistenti", () => {
     // valoreAttuale = 2×95 + 3×56 = 190 + 168 = 358
-    // devAttuale EXUS.DE = |190 − 0.6×358| = |190 − 214.8| = 24.80€, pesoAtt = 190/358 ≈ 53.07% → dev% = |53.07% − 60%| = 6.9%
-    // devAttuale IUSE.MI = |168 − 0.4×358| = |168 − 143.2| = 24.80€, pesoAtt = 168/358 ≈ 46.93% → dev% = |46.93% − 40%| = 6.9%
+    // devAttuale EXUS.DE = |190 − 0.6×358| = 24.80€, pesoAtt = 53.07% → dev% = 6.9%
+    // devAttuale IUSE.MI = |168 − 0.4×358| = 24.80€, pesoAtt = 46.93% → dev% = 6.9%
     const portafoglioConQuote: InputIterazione["portafoglio"] = [
       { ticker: "EXUS.DE", prezzoCorrente: 95.0, quoteAttuali: 2, pesoTarget: 0.6 },
       { ticker: "IUSE.MI", prezzoCorrente: 56.0, quoteAttuali: 3, pesoTarget: 0.4 },
@@ -97,74 +136,61 @@ describe("formattaOutput", () => {
     expect(testo).toContain("6.9%");
   });
 
-  it("Dev attuale mostra n/a quando tutte le quoteAttuali sono zero", () => {
+  it("Tabella Deviazioni: Dev Attuale mostra n/a quando tutte le quoteAttuali sono zero", () => {
     const testo = formattaOutput(output, portafoglio);
-    const righe = testo.split("\n").filter((r) => r.includes("EXUS.DE") || r.includes("IUSE.MI"));
-    expect(righe.length).toBe(2);
-    righe.forEach((r) => expect(r).toContain("n/a"));
+    expect(testo).toContain("Deviazione attuale totale");
+    const rigaDevAttuale = testo.split("\n").find((r) => r.includes("Deviazione attuale totale"));
+    expect(rigaDevAttuale).toContain("n/a");
   });
 
-  it("colonna Dev attuale appare prima di Dev finale nell'header", () => {
+  it("Tabella Deviazioni: Dev mostra D_€ e D_% nella stessa cella", () => {
     const testo = formattaOutput(output, portafoglio);
-    const header = testo.split("\n")[0]!;
-    expect(header.indexOf("Dev attuale")).toBeLessThan(header.indexOf("Dev finale"));
-  });
-
-  it("Dev mostra D_€ e D_% nella stessa cella", () => {
-    const testo = formattaOutput(output, portafoglio);
-    // la cella Dev deve contenere sia € che %
+    // le righe dati nella Tabella Deviazioni contengono sia € che %
     const righeConDev = testo.split("\n").filter((r) => r.includes("€") && r.includes("%") && !r.includes("Peso"));
     expect(righeConDev.length).toBeGreaterThan(0);
   });
 
-  it("riepilogo contiene riga Deviazione attuale totale", () => {
+  it("Tabella Deviazioni: footer contiene Deviazione attuale totale e Deviazione finale totale", () => {
     const testo = formattaOutput(output, portafoglio);
-    expect(testo).toContain("Deviazione attuale totale (D_€):");
+    expect(testo).toContain("Deviazione attuale totale");
+    expect(testo).toContain("Deviazione finale totale");
   });
 
-  it("riepilogo Deviazione attuale totale mostra n/a quando portafoglio a zero", () => {
-    const testo = formattaOutput(output, portafoglio);
-    const riga = testo.split("\n").find((r) => r.includes("Deviazione attuale totale"));
-    expect(riga).toContain("n/a");
-  });
-
-  it("contiene i 4 totali con simbolo € allineato", () => {
-    const testo = formattaOutput(output, portafoglio);
-    const righe = testo.split("\n");
-
-    const rigaTotaleSpeso = righe.find((r) => r.includes("Totale speso:"));
-    const rigaBudgetNonSpeso = righe.find((r) => r.includes("Budget Non Speso"));
-    const rigaDevFinale = righe.find((r) => r.includes("Deviazione finale totale"));
-
-    expect(rigaTotaleSpeso).toBeDefined();
-    expect(rigaBudgetNonSpeso).toBeDefined();
-    expect(rigaDevFinale).toBeDefined();
-
-    // I simboli € del valore devono essere alla stessa colonna (si usa lastIndexOf
-    // perché l'etichetta "D_€" contiene già € all'interno)
-    const colonnaEuro = (riga: string) => riga.lastIndexOf("€");
-    expect(colonnaEuro(rigaTotaleSpeso!)).toBe(colonnaEuro(rigaBudgetNonSpeso!));
-    expect(colonnaEuro(rigaTotaleSpeso!)).toBe(colonnaEuro(rigaDevFinale!));
-  });
-
-  it("Deviazione finale totale e Deviazione attuale totale hanno il simbolo € allineato (portafoglio non zero)", () => {
+  it("Tabella Deviazioni: € dei totali allineati alla stessa colonna", () => {
     const portafoglioConQuote: InputIterazione["portafoglio"] = [
       { ticker: "EXUS.DE", prezzoCorrente: 95.0, quoteAttuali: 2, pesoTarget: 0.6 },
       { ticker: "IUSE.MI", prezzoCorrente: 56.0, quoteAttuali: 3, pesoTarget: 0.4 },
     ];
     const testo = formattaOutput(output, portafoglioConQuote);
     const righe = testo.split("\n");
-
     const rigaDevAttuale = righe.find((r) => r.includes("Deviazione attuale totale"));
     const rigaDevFinale = righe.find((r) => r.includes("Deviazione finale totale"));
-    const rigaTotaleSpeso = righe.find((r) => r.includes("Totale speso:"));
-
     expect(rigaDevAttuale).toBeDefined();
     expect(rigaDevFinale).toBeDefined();
-
     const colonnaEuro = (riga: string) => riga.lastIndexOf("€");
     expect(colonnaEuro(rigaDevAttuale!)).toBe(colonnaEuro(rigaDevFinale!));
-    expect(colonnaEuro(rigaDevAttuale!)).toBe(colonnaEuro(rigaTotaleSpeso!));
+  });
+
+  it("Tabella Quote: € dei totali allineati alla stessa colonna", () => {
+    const testo = formattaOutput(output, portafoglio);
+    const righe = testo.split("\n");
+    const rigaTotaleSpeso = righe.find((r) => r.includes("Totale speso:"));
+    const rigaBudgetNonSpeso = righe.find((r) => r.includes("Budget Non Speso"));
+    expect(rigaTotaleSpeso).toBeDefined();
+    expect(rigaBudgetNonSpeso).toBeDefined();
+    const colonnaEuro = (riga: string) => riga.lastIndexOf("€");
+    expect(colonnaEuro(rigaTotaleSpeso!)).toBe(colonnaEuro(rigaBudgetNonSpeso!));
+  });
+
+  // --- Ordine delle 3 tabelle ---
+
+  it("le 3 tabelle appaiono nell'ordine: Quote → Pesi → Deviazioni", () => {
+    const testo = formattaOutput(output, portafoglio);
+    const posQuote = testo.indexOf("Quote Attuali");
+    const posPesi = testo.indexOf("Peso Attuale");
+    const posDev = testo.indexOf("Dev Attuale");
+    expect(posQuote).toBeLessThan(posPesi);
+    expect(posPesi).toBeLessThan(posDev);
   });
 });
 
