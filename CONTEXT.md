@@ -2,10 +2,28 @@
 
 Algoritmo che, dato un portafoglio esistente, un budget mensile e un'allocazione target in percentuali, decide quante quote di ogni strumento finanziario acquistare per avvicinarsi al target spendendo il budget. Pensato per superare i limiti del bilanciamento intelligente di Fineco, che tende a investire molto meno del budget pur di non sbilanciare le percentuali.
 
+## Perimetro
+
+Il PAC di Fineco supporta esclusivamente **ETP (Exchange Traded Product)**: ETF, ETC ed ETN. Tutto il resto è fuori perimetro.
+
+**In perimetro:**
+- ETF (Exchange Traded Fund) — es. ETF azionari, ETF obbligazionari, ETF su materie prime
+- ETC (Exchange Traded Commodity) — es. ETC sull'oro fisico
+- ETN (Exchange Traded Note) — es. ETN su indici esotici
+- ETP su criptovalute — es. un ETF o ETP su Bitcoin: rientrano come ETP, non come criptovaluta diretta
+
+**Fuori perimetro:**
+- Azioni singole
+- Obbligazioni e BTP acquistati direttamente
+- Fondi comuni non quotati
+- Criptovalute acquistate direttamente (es. BTC su exchange crypto)
+
+> **Nota terminologica**: quando il progetto parla di uno **Strumento** ad alta volatilità come "Bitcoin", intende sempre un ETP su Bitcoin quotato su Fineco, non la criptovaluta diretta.
+
 ## Language
 
 **Strumento**:
-Un prodotto finanziario acquistabile dal PAC (es. ETF, fondo). Si compra a **quote intere**.
+Un ETP (ETF, ETC o ETN) acquistabile tramite il PAC di Fineco. Si compra a **quote intere**. Azioni singole, obbligazioni dirette e criptovalute non sono **Strumenti** per questo progetto — vedi sezione **Perimetro**.
 _Avoid_: titolo, asset, ticker
 
 **Quota**:
