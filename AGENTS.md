@@ -18,7 +18,7 @@ npx skills experimental_install
 npm test               # esegui test suite (Vitest)
 npm run test:watch     # test in watch mode
 npm run typecheck      # tsc --noEmit
-npm run cli <scenario> # esegui CLI su un file scenario JSON (es. scenarios/scenario1-marco.json)
+npm run iterazione <scenario> # esegui una Iterazione su un file scenario JSON (es. scenarios/scenario1-marco.json)
 npm run simulate:all   # simula tutti e 4 gli scenari e genera HTML in output/
 ```
 
@@ -42,7 +42,7 @@ Costo = (1 − α) * U + α * D_€
 
 - **`src/core/`** — algoritmo puro `decideIterazione(input): output`. Ricerca esaustiva su tutte le combinazioni di quote acquistabili. Funzione pura, niente I/O.
 - **`src/prezzi/`** — Adapter Pattern verso `yahoo-finance2`. Espone `prezzoCorrente(ticker)` e `prezziPerDate(ticker, date[])`. Sostituibile senza toccare il core.
-- **`src/cli/`** — CLI di Validazione: legge un file scenario JSON, chiama `prezzoCorrente` + `decideIterazione`, stampa tabella ASCII.
+- **`src/cli/`** — Esecutore di Iterazione: legge un file scenario JSON, chiama `prezzoCorrente` + `decideIterazione`, stampa tabella ASCII.
 - **`src/simulatore/`** — simula N iterazioni mensili consecutive per una griglia di valori α, accumulando metriche di portafoglio.
 - **`src/report/`** — genera HTML con 3 grafici Chart.js a partire dal `SimulationResult` del simulatore.
 - **`src/scenarios/`** — parser JSON per scenari completi (con `durataInMesi`, `grigliaDiAlfa`, `dataInizio`).
@@ -52,7 +52,7 @@ Costo = (1 − α) * U + α * D_€
 
 ```
 Scenario JSON → parseScenarioCompleto
-    ├── CLI: prezzoCorrente → decideIterazione → tabella ASCII
+    ├── Esecutore di Iterazione: prezzoCorrente → decideIterazione → tabella ASCII
     └── Simulatore: prezziPerDate (×N mesi) → decideIterazione (×N mesi × N α) → SimulationResult → HTML
 ```
 

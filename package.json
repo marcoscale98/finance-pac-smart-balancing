@@ -6,7 +6,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "cli": "tsx src/cli/index.ts",
+    "iterazione": "tsx src/cli/index.ts",
     "simulate:all": "tsx src/simula.ts --all",
     "simulate": "tsx src/simula.ts",
     "listino": "tsx src/data-inizio-listino.ts"
