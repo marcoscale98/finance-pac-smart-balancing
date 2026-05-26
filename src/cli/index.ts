@@ -87,7 +87,7 @@ export function formattaOutput(
           })();
     return {
       ticker: acquisto.ticker,
-      detenute: String(s.quoteAttuali),
+      attuali: String(s.quoteAttuali),
       acquistateCosto: `${acquisto.quoteAcquistare} (${costo.toFixed(2)}€)`,
       finali: String(quoteFinali),
       pesoTarget: `${(s.pesoTarget * 100).toFixed(2)}%`,
@@ -100,7 +100,7 @@ export function formattaOutput(
   // Larghezze colonne (dinamiche sul contenuto)
   const HDR = {
     strumento: "Strumento",
-    detenute: "Quote Attuali",
+    attuali: "Quote Attuali",
     acquistateCosto: "Quote Acquistate (Costo)",
     finali: "Quote Finali",
     pesoTarget: "Peso Target",
@@ -110,7 +110,7 @@ export function formattaOutput(
   };
   const w = {
     strumento: Math.max(HDR.strumento.length, ...datiRighe.map((r) => r.ticker.length)),
-    detenute: Math.max(HDR.detenute.length, ...datiRighe.map((r) => r.detenute.length)),
+    attuali: Math.max(HDR.attuali.length, ...datiRighe.map((r) => r.attuali.length)),
     acquistateCosto: Math.max(HDR.acquistateCosto.length, ...datiRighe.map((r) => r.acquistateCosto.length)),
     finali: Math.max(HDR.finali.length, ...datiRighe.map((r) => r.finali.length)),
     pesoTarget: Math.max(HDR.pesoTarget.length, ...datiRighe.map((r) => r.pesoTarget.length)),
@@ -122,17 +122,17 @@ export function formattaOutput(
   const sep = (n: number) => "-".repeat(n);
   const col = (s: string, n: number) => s.padStart(n);
   const header =
-    `${HDR.strumento.padEnd(w.strumento)} | ${col(HDR.detenute, w.detenute)} | ` +
+    `${HDR.strumento.padEnd(w.strumento)} | ${col(HDR.attuali, w.attuali)} | ` +
     `${col(HDR.acquistateCosto, w.acquistateCosto)} | ${col(HDR.finali, w.finali)} | ` +
     `${col(HDR.pesoTarget, w.pesoTarget)} | ${col(HDR.pesoFinale, w.pesoFinale)} | ` +
     `${col(HDR.devAttuale, w.devAttuale)} | ${col(HDR.dev, w.dev)}`;
   const separatore =
-    `${sep(w.strumento)}-|-${sep(w.detenute)}-|-${sep(w.acquistateCosto)}-|-` +
+    `${sep(w.strumento)}-|-${sep(w.attuali)}-|-${sep(w.acquistateCosto)}-|-` +
     `${sep(w.finali)}-|-${sep(w.pesoTarget)}-|-${sep(w.pesoFinale)}-|-${sep(w.devAttuale)}-|-${sep(w.dev)}`;
 
   const righeTabella = datiRighe.map(
     (r) =>
-      `${r.ticker.padEnd(w.strumento)} | ${col(r.detenute, w.detenute)} | ` +
+      `${r.ticker.padEnd(w.strumento)} | ${col(r.attuali, w.attuali)} | ` +
       `${col(r.acquistateCosto, w.acquistateCosto)} | ${col(r.finali, w.finali)} | ` +
       `${col(r.pesoTarget, w.pesoTarget)} | ${col(r.pesoFinale, w.pesoFinale)} | ` +
       `${col(r.devAttuale, w.devAttuale)} | ${col(r.dev, w.dev)}`,
