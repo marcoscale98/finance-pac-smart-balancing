@@ -53,6 +53,10 @@ _Avoid_: valore effettivo, valore attuale
 Il valore in euro che uno **Strumento** dovrebbe avere a fine **Iterazione** per rispettare esattamente il suo **Peso Target**: `Peso Target × Valore Finale Portafoglio`.
 _Avoid_: valore ideale, valore obiettivo
 
+**Deviazione Attuale** (`D_€^att`):
+Lo scostamento in euro tra il **Valore** corrente di uno **Strumento** (basato sulle **Quote Detenute**) e il suo **Valore Target** calcolato sul **Portafoglio** attuale: `|quoteDetenute × prezzoCorrente − pesoTarget × valoreAttualePortafoglio|`. Misura da dove si parte prima di ogni **Iterazione**. Non è definita quando il **Portafoglio** vale 0€ (nessuna **Quota** detenuta).
+_Avoid_: deviazione corrente, deviazione iniziale
+
 **Deviazione** (`D_€`):
 Lo scostamento in euro tra il **Valore Finale** di uno **Strumento** e il suo **Valore Target**: `|Valore Finale − Valore Target|`. Senza qualificatori, "Deviazione" si intende sempre in euro.
 
