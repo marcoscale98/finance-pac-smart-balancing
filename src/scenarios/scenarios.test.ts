@@ -6,8 +6,8 @@ import { parseScenario } from "../cli/index.js";
 
 const scenarioCompletoValido = JSON.stringify({
   strumenti: [
-    { ticker: "EXUS.DE", pesoTarget: 0.405, quoteDetenute: 0 },
-    { ticker: "IUSE.MI", pesoTarget: 0.315, quoteDetenute: 0 },
+    { ticker: "EXUS.DE", pesoTarget: 0.405, quoteAttuali: 0 },
+    { ticker: "IUSE.MI", pesoTarget: 0.315, quoteAttuali: 0 },
   ],
   budget: 400,
   alfa: 0.5,

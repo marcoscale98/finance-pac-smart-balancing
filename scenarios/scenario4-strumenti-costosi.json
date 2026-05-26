@@ -1,8 +1,8 @@
 {
   "strumenti": [
-    { "ticker": "EQQQ.DE", "pesoTarget": 0.60, "quoteDetenute": 0 },
-    { "ticker": "PHAU.MI", "pesoTarget": 0.30, "quoteDetenute": 0 },
-    { "ticker": "MEUD.MI", "pesoTarget": 0.10, "quoteDetenute": 0 }
+    { "ticker": "EQQQ.DE", "pesoTarget": 0.60, "quoteAttuali": 0 },
+    { "ticker": "PHAU.MI", "pesoTarget": 0.30, "quoteAttuali": 0 },
+    { "ticker": "MEUD.MI", "pesoTarget": 0.10, "quoteAttuali": 0 }
   ],
   "budget": 500,
   "alfa": 0.5,

@@ -30,20 +30,24 @@ _Avoid_: titolo, asset, ticker
 Unità minima indivisibile di uno **Strumento**. L'algoritmo decide quante quote acquistare di ciascuno.
 _Avoid_: share, unit, frazione
 
-**Quote Detenute**:
+**Quote Attuali**:
 Le quote di uno **Strumento** possedute prima di un'**Iterazione**. Input dell'algoritmo.
-_Avoid_: quote iniziali, quote precedenti
+_Avoid_: quote detenute, quote iniziali, quote precedenti
 
 **Quote Acquistate**:
 Le quote di uno **Strumento** acquistate durante un'**Iterazione**. Output principale dell'algoritmo.
 _Avoid_: quote comprate, ordine
 
+**Quote Acquistate Fineco**:
+Le quote di uno **Strumento** che il PAC di Fineco ha acquistato (o acquisterebbe) nella stessa **Iterazione**. Inserite manualmente dall'utente nello scenario JSON come campo opzionale `quoteAcquistateFineco`. Devono essere presenti per tutti gli **Strumenti** oppure per nessuno.
+_Avoid_: quote Fineco, acquisti Fineco
+
 **Quote Finali**:
-Le quote di uno **Strumento** possedute a fine **Iterazione**: `Quote Detenute + Quote Acquistate`. Non sono un output diretto dell'algoritmo — si derivano.
+Le quote di uno **Strumento** possedute a fine **Iterazione**: `Quote Attuali + Quote Acquistate`. Non sono un output diretto dell'algoritmo — si derivano.
 _Avoid_: quote totali, quote risultanti
 
 **Portafoglio**:
-L'insieme degli **Strumenti** già posseduti, ciascuno con la quantità di **Quote** detenute e il prezzo corrente.
+L'insieme degli **Strumenti** già posseduti, ciascuno con le **Quote Attuali** e il prezzo corrente.
 _Avoid_: account, holdings
 
 **Allocazione Target**:
@@ -53,9 +57,13 @@ _Avoid_: target, ideal state, mix
 **Peso Target** (`t_i`):
 La percentuale assegnata a un singolo **Strumento** nell'**Allocazione Target**, espressa come frazione tra 0 e 1.
 
+**Peso Attuale**:
+La percentuale che un **Strumento** occupa nel **Portafoglio** prima di un'**Iterazione**: `Quote Attuali × Prezzo Corrente / Valore Attuale Portafoglio`. Non è definito quando il **Portafoglio** vale 0€.
+_Avoid_: peso corrente, peso iniziale
+
 **Peso Finale**:
 La percentuale che un **Strumento** occupa nel **Portafoglio** a fine **Iterazione**: `Valore Finale Strumento / Valore Finale Portafoglio`. Si confronta con il **Peso Target** per valutare quanto l'**Iterazione** si sia avvicinata all'**Allocazione Target**.
-_Avoid_: peso effettivo, peso attuale, peso reale, allocazione effettiva
+_Avoid_: peso effettivo, peso reale, allocazione effettiva
 
 **Budget** (`B`):
 L'importo massimo in euro che l'algoritmo può spendere in una singola esecuzione. Vincolo duro: non si sfora mai.
@@ -72,7 +80,7 @@ Il valore in euro che uno **Strumento** dovrebbe avere a fine **Iterazione** per
 _Avoid_: valore ideale, valore obiettivo
 
 **Deviazione Attuale** (`D_€^att`):
-Lo scostamento in euro tra il **Valore** corrente di uno **Strumento** (basato sulle **Quote Detenute**) e il suo **Valore Target** calcolato sul **Portafoglio** attuale: `|quoteDetenute × prezzoCorrente − pesoTarget × valoreAttualePortafoglio|`. Misura da dove si parte prima di ogni **Iterazione**. Non è definita quando il **Portafoglio** vale 0€ (nessuna **Quota** detenuta).
+Lo scostamento in euro tra il **Valore** corrente di uno **Strumento** (basato sulle **Quote Attuali**) e il suo **Valore Target** calcolato sul **Portafoglio** attuale: `|quoteAttuali × prezzoCorrente − pesoTarget × valoreAttualePortafoglio|`. Misura da dove si parte prima di ogni **Iterazione**. Non è definita quando il **Portafoglio** vale 0€ (nessuna **Quota** posseduta).
 _Avoid_: deviazione corrente, deviazione iniziale
 
 **Deviazione** (`D_€`):
@@ -91,7 +99,7 @@ Numero fisso tra 0 e 1 che bilancia i due obiettivi dell'algoritmo: minimizzare 
 Comportamento del PAC intelligente di Fineco che, per non sbilanciare i pesi, investe molto meno del budget disponibile, rallentando la crescita del portafoglio e indirettamente rendendo più difficile il futuro ribilanciamento. Osservato in particolare nelle prime **Iterazioni** quando uno o più **Strumenti** hanno una **Quota** costosa rispetto al **Budget** (es. Budget 400€, Gold con Peso Target 10% ma una Quota da 350€): in questi casi Fineco riduce drasticamente l'investimento totale invece di accettare temporaneamente una **Deviazione**. È il problema che questo progetto vuole risolvere.
 
 **Esecutore di Iterazione**:
-Strumento da linea di comando per eseguire **Iterazioni** singole del **Mio Algoritmo** su scenari specifici e mostrarne il risultato (quote da acquistare, **Budget Non Speso**, **Deviazione** residua). Il confronto con il PAC di Fineco avviene **esternamente**: l'utente lancia lo stesso scenario sull'app Fineco sul telefono e confronta i due risultati a mano. L'**Esecutore di Iterazione** non simula Fineco — il **Problema Fineco** è osservato empiricamente, non riprodotto in codice.
+Strumento da linea di comando per eseguire **Iterazioni** singole del **Mio Algoritmo** su scenari specifici e mostrarne il risultato (quote da acquistare, **Budget Non Speso**, **Deviazione** residua). Se lo scenario include le **Quote Acquistate Fineco** per ogni **Strumento**, l'output mostra un confronto affiancato tra il **Mio Algoritmo** e Fineco. Il **Problema Fineco** è osservato empiricamente: le **Quote Acquistate Fineco** vengono inserite a mano dall'utente dopo aver lanciato il PAC sull'app Fineco.
 _Avoid_: CLI di Validazione, CLI
 
 **Simulatore**:

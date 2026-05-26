@@ -69,13 +69,13 @@ async function simulaSerie(
 
     portafoglio = portafoglio.map((s) => {
       const acquisto = output.acquisti.find((a) => a.ticker === s.ticker)!;
-      return { ...s, quoteDetenute: s.quoteDetenute + acquisto.quoteAcquistare };
+      return { ...s, quoteAttuali: s.quoteAttuali + acquisto.quoteAcquistare };
     });
 
     spesaCumulativa += scenario.budget - output.budgetNonSpeso;
 
     const valorePortafoglio = portafoglio.reduce(
-      (acc, s) => acc + s.quoteDetenute * s.prezzoCorrente,
+      (acc, s) => acc + s.quoteAttuali * s.prezzoCorrente,
       0,
     );
 

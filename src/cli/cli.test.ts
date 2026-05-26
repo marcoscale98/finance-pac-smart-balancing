@@ -8,8 +8,8 @@ vi.mock("../prezzi/index.js", () => ({
 
 const scenarioValido = JSON.stringify({
   strumenti: [
-    { ticker: "EXUS.DE", pesoTarget: 0.405, quoteDetenute: 0 },
-    { ticker: "IUSE.MI", pesoTarget: 0.315, quoteDetenute: 0 },
+    { ticker: "EXUS.DE", pesoTarget: 0.405, quoteAttuali: 0 },
+    { ticker: "IUSE.MI", pesoTarget: 0.315, quoteAttuali: 0 },
   ],
   budget: 400,
   alfa: 0.5,
@@ -22,7 +22,7 @@ describe("parseScenario", () => {
     expect(scenario.strumenti).toHaveLength(2);
     expect(scenario.strumenti[0]!.ticker).toBe("EXUS.DE");
     expect(scenario.strumenti[0]!.pesoTarget).toBe(0.405);
-    expect(scenario.strumenti[0]!.quoteDetenute).toBe(0);
+    expect(scenario.strumenti[0]!.quoteAttuali).toBe(0);
     expect(scenario.budget).toBe(400);
     expect(scenario.alfa).toBe(0.5);
   });
@@ -48,8 +48,8 @@ describe("parseScenario", () => {
 
 describe("formattaOutput", () => {
   const portafoglio: InputIterazione["portafoglio"] = [
-    { ticker: "EXUS.DE", prezzoCorrente: 95.0, quoteDetenute: 0, pesoTarget: 0.6 },
-    { ticker: "IUSE.MI", prezzoCorrente: 56.0, quoteDetenute: 0, pesoTarget: 0.4 },
+    { ticker: "EXUS.DE", prezzoCorrente: 95.0, quoteAttuali: 0, pesoTarget: 0.6 },
+    { ticker: "IUSE.MI", prezzoCorrente: 56.0, quoteAttuali: 0, pesoTarget: 0.4 },
   ];
 
   const output: OutputIterazione = {
@@ -89,15 +89,15 @@ describe("formattaOutput", () => {
     // devAttuale EXUS.DE = |190 − 0.6×358| = |190 − 214.8| = 24.80€, pesoAtt = 190/358 ≈ 53.07% → dev% = |53.07% − 60%| = 6.9%
     // devAttuale IUSE.MI = |168 − 0.4×358| = |168 − 143.2| = 24.80€, pesoAtt = 168/358 ≈ 46.93% → dev% = |46.93% − 40%| = 6.9%
     const portafoglioConQuote: InputIterazione["portafoglio"] = [
-      { ticker: "EXUS.DE", prezzoCorrente: 95.0, quoteDetenute: 2, pesoTarget: 0.6 },
-      { ticker: "IUSE.MI", prezzoCorrente: 56.0, quoteDetenute: 3, pesoTarget: 0.4 },
+      { ticker: "EXUS.DE", prezzoCorrente: 95.0, quoteAttuali: 2, pesoTarget: 0.6 },
+      { ticker: "IUSE.MI", prezzoCorrente: 56.0, quoteAttuali: 3, pesoTarget: 0.4 },
     ];
     const testo = formattaOutput(output, portafoglioConQuote);
     expect(testo).toContain("24.80€");
     expect(testo).toContain("6.9%");
   });
 
-  it("Dev attuale mostra n/a quando tutte le quoteDetenute sono zero", () => {
+  it("Dev attuale mostra n/a quando tutte le quoteAttuali sono zero", () => {
     const testo = formattaOutput(output, portafoglio);
     const righe = testo.split("\n").filter((r) => r.includes("EXUS.DE") || r.includes("IUSE.MI"));
     expect(righe.length).toBe(2);
@@ -149,8 +149,8 @@ describe("formattaOutput", () => {
 
   it("Deviazione finale totale e Deviazione attuale totale hanno il simbolo € allineato (portafoglio non zero)", () => {
     const portafoglioConQuote: InputIterazione["portafoglio"] = [
-      { ticker: "EXUS.DE", prezzoCorrente: 95.0, quoteDetenute: 2, pesoTarget: 0.6 },
-      { ticker: "IUSE.MI", prezzoCorrente: 56.0, quoteDetenute: 3, pesoTarget: 0.4 },
+      { ticker: "EXUS.DE", prezzoCorrente: 95.0, quoteAttuali: 2, pesoTarget: 0.6 },
+      { ticker: "IUSE.MI", prezzoCorrente: 56.0, quoteAttuali: 3, pesoTarget: 0.4 },
     ];
     const testo = formattaOutput(output, portafoglioConQuote);
     const righe = testo.split("\n");
@@ -172,8 +172,8 @@ describe("eseguiScenario (smoke test E2E)", () => {
   it("con prezzoCorrente mockato → output non vuoto con i ticker degli strumenti", async () => {
     const scenario = {
       strumenti: [
-        { ticker: "EXUS.DE", pesoTarget: 0.6, quoteDetenute: 0 },
-        { ticker: "IUSE.MI", pesoTarget: 0.4, quoteDetenute: 0 },
+        { ticker: "EXUS.DE", pesoTarget: 0.6, quoteAttuali: 0 },
+        { ticker: "IUSE.MI", pesoTarget: 0.4, quoteAttuali: 0 },
       ],
       budget: 400,
       alfa: 0.5,

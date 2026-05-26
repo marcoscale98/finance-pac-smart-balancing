@@ -23,7 +23,7 @@ async function simulaFile(percorso: string): Promise<void> {
     portafoglioIniziale: scenarioRaw.strumenti.map((s) => ({
       ticker: s.ticker,
       pesoTarget: s.pesoTarget,
-      quoteDetenute: s.quoteDetenute,
+      quoteAttuali: s.quoteAttuali,
       prezzoCorrente: 0,
     })),
     budget: scenarioRaw.budget,
