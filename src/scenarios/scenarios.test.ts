@@ -86,6 +86,53 @@ describe("parseScenarioCompleto", () => {
   });
 });
 
+describe("parseScenario — quoteAcquistateFineco", () => {
+  it("campo presente su tutti gli strumenti → parsato correttamente", () => {
+    const json = JSON.stringify({
+      strumenti: [
+        { ticker: "EXUS.DE", pesoTarget: 0.6, quoteAttuali: 10, quoteAcquistateFineco: 5 },
+        { ticker: "IUSE.MI", pesoTarget: 0.4, quoteAttuali: 20, quoteAcquistateFineco: 3 },
+      ],
+      budget: 400,
+      alfa: 0.5,
+    });
+
+    const scenario = parseScenario(json);
+
+    expect(scenario.strumenti[0]!.quoteAcquistateFineco).toBe(5);
+    expect(scenario.strumenti[1]!.quoteAcquistateFineco).toBe(3);
+  });
+
+  it("campo presente solo su alcuni strumenti → lancia errore tutti-o-nessuno", () => {
+    const json = JSON.stringify({
+      strumenti: [
+        { ticker: "EXUS.DE", pesoTarget: 0.6, quoteAttuali: 10, quoteAcquistateFineco: 5 },
+        { ticker: "IUSE.MI", pesoTarget: 0.4, quoteAttuali: 20 },
+      ],
+      budget: 400,
+      alfa: 0.5,
+    });
+
+    expect(() => parseScenario(json)).toThrow("tutti-o-nessuno");
+  });
+
+  it("campo assente su tutti gli strumenti → scenario valido senza errore", () => {
+    const json = JSON.stringify({
+      strumenti: [
+        { ticker: "EXUS.DE", pesoTarget: 0.6, quoteAttuali: 10 },
+        { ticker: "IUSE.MI", pesoTarget: 0.4, quoteAttuali: 20 },
+      ],
+      budget: 400,
+      alfa: 0.5,
+    });
+
+    const scenario = parseScenario(json);
+
+    expect(scenario.strumenti[0]!.quoteAcquistateFineco).toBeUndefined();
+    expect(scenario.strumenti[1]!.quoteAcquistateFineco).toBeUndefined();
+  });
+});
+
 describe("file scenario JSON", () => {
   const scenarioFiles = [
     "scenario1-marco",
