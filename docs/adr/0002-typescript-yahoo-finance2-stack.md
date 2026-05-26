@@ -14,4 +14,4 @@ Scelto **TypeScript + `yahoo-finance2`** perché la libreria implementa **schema
 
 - L'algoritmo core è una **libreria TypeScript pura** (zero I/O, prezzi passati come input). La sorgente prezzi è isolata in uno strato esterno e può essere sostituita senza toccare la logica.
 - Se Yahoo dovesse diventare inutilizzabile, il refactor consiste nel sostituire il modulo prezzi (es. con EODHD a pagamento), non l'algoritmo.
-- La scelta di TypeScript permette di riutilizzare la libreria sia nella **CLI di Validazione** sia in una eventuale UI web futura (fase 2), senza port di linguaggio.
+- La scelta di TypeScript permette di riutilizzare la libreria sia nell'**Esecutore di Iterazione** sia in una eventuale UI web futura (fase 2), senza port di linguaggio.

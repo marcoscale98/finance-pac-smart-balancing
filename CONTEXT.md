@@ -90,8 +90,9 @@ Numero fisso tra 0 e 1 che bilancia i due obiettivi dell'algoritmo: minimizzare 
 **Problema Fineco**:
 Comportamento del PAC intelligente di Fineco che, per non sbilanciare i pesi, investe molto meno del budget disponibile, rallentando la crescita del portafoglio e indirettamente rendendo più difficile il futuro ribilanciamento. Osservato in particolare nelle prime **Iterazioni** quando uno o più **Strumenti** hanno una **Quota** costosa rispetto al **Budget** (es. Budget 400€, Gold con Peso Target 10% ma una Quota da 350€): in questi casi Fineco riduce drasticamente l'investimento totale invece di accettare temporaneamente una **Deviazione**. È il problema che questo progetto vuole risolvere.
 
-**CLI di Validazione**:
-Strumento da linea di comando per eseguire **Iterazioni** singole del **Mio Algoritmo** su scenari specifici e mostrarne il risultato (quote da acquistare, **Budget Non Speso**, **Deviazione** residua). Il confronto con il PAC di Fineco avviene **esternamente**: l'utente lancia lo stesso scenario sull'app Fineco sul telefono e confronta i due risultati a mano. La CLI non simula Fineco — il **Problema Fineco** è osservato empiricamente, non riprodotto in codice.
+**Esecutore di Iterazione**:
+Strumento da linea di comando per eseguire **Iterazioni** singole del **Mio Algoritmo** su scenari specifici e mostrarne il risultato (quote da acquistare, **Budget Non Speso**, **Deviazione** residua). Il confronto con il PAC di Fineco avviene **esternamente**: l'utente lancia lo stesso scenario sull'app Fineco sul telefono e confronta i due risultati a mano. L'**Esecutore di Iterazione** non simula Fineco — il **Problema Fineco** è osservato empiricamente, non riprodotto in codice.
+_Avoid_: CLI di Validazione, CLI
 
 **Simulatore**:
 Strumento per esplorare il comportamento del **Mio Algoritmo** su molte **Iterazioni** consecutive (range temporale: **6 mesi - 5 anni**), variando la **Preferenza Utente** `α`. Produce grafici comparativi per metriche chiave (valore portafoglio, budget investito teorico vs effettivo, deviazione media nel tempo). Non confronta strategie diverse: confronta versioni dello stesso algoritmo con `α` diversi. Il range è intenzionalmente limitato perché il **Problema Fineco** si manifesta nelle prime **Iterazioni** (portafoglio piccolo, **Quote** costose rispetto al **Budget**): orizzonti più lunghi diluiscono il segnale che il **Simulatore** deve mostrare. Griglia di default per `α`: `0.25`, `0.50`, `0.75` (esplora rispettivamente preferenze "spendi più dei target", "neutro", "rispetta più i target").
@@ -129,7 +130,7 @@ Il comportamento adattivo (privilegiare spendere quando il portafoglio è piccol
 
 **Adapter Prezzi**:
 Modulo separato e sostituibile che espone due funzioni al resto del sistema. Non contiene logica di business — è un adattatore puro verso la sorgente dati esterna (`yahoo-finance2`). Cambiare sorgente dati richiede solo modificare questo modulo.
-- `prezzoCorrente(ticker)` — prezzo corrente di uno **Strumento**; usata dalla **CLI di Validazione**.
+- `prezzoCorrente(ticker)` — prezzo corrente di uno **Strumento**; usata dall'**Esecutore di Iterazione**.
 - `prezziPerDate(ticker, date[])` — dato un array di date specifiche (es. una per ogni mese del **Simulatore**), restituisce il prezzo di ciascuna. Internamente interroga la sorgente sul range `[min, max]` e mappa il giorno più vicino per ogni data richiesta.
 _Avoid_: `getCurrentPrice`, `getHistoricalPrices`, serie storica generica.
 

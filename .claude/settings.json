@@ -63,7 +63,7 @@
             "WebFetch(domain:api.github.com)",
             "WebFetch(domain:registry.npmjs.org)",
             "Bash(npm install --no-save *)",
-            "Bash(npm run cli *)"
+            "Bash(npm run iterazione *)"
         ]
     }
 }
