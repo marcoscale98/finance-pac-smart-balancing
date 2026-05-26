@@ -182,6 +182,104 @@ describe("formattaOutput", () => {
     expect(colonnaEuro(rigaTotaleSpeso!)).toBe(colonnaEuro(rigaBudgetNonSpeso!));
   });
 
+  // --- Colonne Fineco ---
+
+  describe("con finecoAcquisti", () => {
+    // portafoglio: EXUS.DE 95€ ×0 quote, IUSE.MI 56€ ×0 quote
+    // output acquisti: EXUS.DE 3, IUSE.MI 2
+    // finecoAcquisti: [2, 1]
+    // Calcoli:
+    //   Totale speso algo:  3×95 + 2×56 = 285 + 112 = 397€  | budgetNonSpeso=17 → budget=414€
+    //   Totale speso fineco: 2×95 + 1×56 = 190 + 56 = 246€
+    //   Budget Non Speso fineco: 414 - 246 = 168€
+    //   Quote finali fineco: EXUS.DE=2, IUSE.MI=1
+    //   Valore portafoglio fineco: 2×95 + 1×56 = 246€
+    //   Peso Finale Fineco EXUS.DE: 190/246 ≈ 77.24%
+    //   Dev Finale Fineco EXUS.DE: |190 - 0.6×246| = |190-147.6| = 42.40€, dev%=|0.7724-0.6|=17.2%
+    //   Dev Finale Fineco IUSE.MI: |56 - 0.4×246| = |56-98.4| = 42.40€, dev%=|0.2276-0.4|=17.2%
+    //   Deviazione finale fineco totale: 42.40+42.40 = 84.80€
+    const finecoAcquisti = [2, 1];
+
+    it("Tabella Quote: header contiene Acquistate Fineco (Costo) e Quote Finali Fineco", () => {
+      const testo = formattaOutput(output, portafoglio, finecoAcquisti);
+      expect(testo).toContain("Acquistate Fineco (Costo)");
+      expect(testo).toContain("Quote Finali Fineco");
+    });
+
+    it("Tabella Quote: valori corretti per quote e costo Fineco", () => {
+      const testo = formattaOutput(output, portafoglio, finecoAcquisti);
+      // EXUS.DE: 2 quote × 95€ = 190.00€
+      expect(testo).toContain("2 (190.00€)");
+      // IUSE.MI: 1 quota × 56€ = 56.00€
+      expect(testo).toContain("1 (56.00€)");
+      // Quote finali fineco: EXUS.DE=2, IUSE.MI=1 (quoteAttuali=0 + fineco)
+    });
+
+    it("Tabella Pesi: header contiene Peso Finale Fineco", () => {
+      const testo = formattaOutput(output, portafoglio, finecoAcquisti);
+      expect(testo).toContain("Peso Finale Fineco");
+    });
+
+    it("Tabella Pesi: Peso Finale Fineco calcolato con denominatore portafoglio Fineco", () => {
+      // Valore portafoglio fineco: 2×95 + 1×56 = 246€
+      // Peso EXUS.DE: 190/246 = 77.24%
+      // Peso IUSE.MI: 56/246 = 22.76%
+      const testo = formattaOutput(output, portafoglio, finecoAcquisti);
+      expect(testo).toContain("77.24%");
+      expect(testo).toContain("22.76%");
+    });
+
+    it("Tabella Deviazioni: header contiene Dev Finale Fineco", () => {
+      const testo = formattaOutput(output, portafoglio, finecoAcquisti);
+      expect(testo).toContain("Dev Finale Fineco");
+    });
+
+    it("Tabella Deviazioni: Dev Finale Fineco mostra € e % nella stessa cella", () => {
+      // Dev EXUS.DE: |190 - 0.6×246| = |190-147.6| = 42.40€, dev%=|0.7724-0.6|=17.2%
+      // Dev IUSE.MI: |56 - 0.4×246| = |56-98.4| = 42.40€, dev%=|0.2276-0.4|=17.2%
+      const testo = formattaOutput(output, portafoglio, finecoAcquisti);
+      expect(testo).toContain("42.40€");
+      expect(testo).toContain("17.2%");
+    });
+
+    it("Riepilogo comparativo: presente in fondo con intestazione Mio Algoritmo e Fineco", () => {
+      const testo = formattaOutput(output, portafoglio, finecoAcquisti);
+      expect(testo).toContain("Mio Algoritmo");
+      expect(testo).toContain("Fineco");
+    });
+
+    it("Riepilogo comparativo: contiene Totale speso, Budget Non Speso, Deviazione finale", () => {
+      const testo = formattaOutput(output, portafoglio, finecoAcquisti);
+      const righe = testo.split("\n");
+      // Cerca le righe del riepilogo (dopo la sezione Deviazioni)
+      const posDeviazione = testo.lastIndexOf("Deviazione finale");
+      expect(posDeviazione).toBeGreaterThan(0);
+    });
+
+    it("Riepilogo comparativo: valori numerici corretti per entrambe le colonne", () => {
+      // Totale speso algo: 3×95 + 2×56 = 397€
+      // Budget Non Speso algo: 17€
+      // Deviazione finale algo: 8.50€ (dall'output)
+      // Totale speso fineco: 2×95 + 1×56 = 246€
+      // Budget Non Speso fineco: 414 - 246 = 168€
+      // Deviazione finale fineco: 42.40 + 42.40 = 84.80€
+      const testo = formattaOutput(output, portafoglio, finecoAcquisti);
+      expect(testo).toContain("397.00€");
+      expect(testo).toContain("246.00€");
+      expect(testo).toContain("168.00€");
+      expect(testo).toContain("84.80€");
+    });
+
+    it("senza Fineco: output non contiene colonne Fineco", () => {
+      const testo = formattaOutput(output, portafoglio);
+      expect(testo).not.toContain("Acquistate Fineco");
+      expect(testo).not.toContain("Quote Finali Fineco");
+      expect(testo).not.toContain("Peso Finale Fineco");
+      expect(testo).not.toContain("Dev Finale Fineco");
+      expect(testo).not.toContain("Mio Algoritmo");
+    });
+  });
+
   // --- Ordine delle 3 tabelle ---
 
   it("le 3 tabelle appaiono nell'ordine: Quote → Pesi → Deviazioni", () => {
@@ -210,5 +308,22 @@ describe("eseguiScenario (smoke test E2E)", () => {
     expect(testo.length).toBeGreaterThan(0);
     expect(testo).toContain("EXUS.DE");
     expect(testo).toContain("IUSE.MI");
+  });
+
+  it("con quoteAcquistateFineco nello scenario → output contiene colonne Fineco", async () => {
+    const scenario = {
+      strumenti: [
+        { ticker: "EXUS.DE", pesoTarget: 0.6, quoteAttuali: 0, quoteAcquistateFineco: 2 },
+        { ticker: "IUSE.MI", pesoTarget: 0.4, quoteAttuali: 0, quoteAcquistateFineco: 1 },
+      ],
+      budget: 400,
+      alfa: 0.5,
+    };
+
+    const testo = await eseguiScenario(scenario);
+
+    expect(testo).toContain("Acquistate Fineco (Costo)");
+    expect(testo).toContain("Mio Algoritmo");
+    expect(testo).toContain("Fineco");
   });
 });
