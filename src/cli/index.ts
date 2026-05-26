@@ -63,6 +63,9 @@ export function formattaOutput(
     0,
   );
 
+  // Valore attuale portafoglio (pre-iterazione)
+  const valoreAttuale = portafoglio.reduce((acc, s) => acc + s.quoteDetenute * s.prezzoCorrente, 0);
+
   // Dati riga per ogni strumento
   const datiRighe = output.acquisti.map((acquisto, i) => {
     const s = portafoglio[i]!;
@@ -72,6 +75,16 @@ export function formattaOutput(
     const devEuro = Math.abs(valoreFin - s.pesoTarget * valoreFinale);
     const pesoFin = valoreFinale > 0 ? valoreFin / valoreFinale : 0;
     const devPerc = Math.abs(pesoFin - s.pesoTarget);
+    const devAttuale =
+      valoreAttuale === 0
+        ? "n/a"
+        : (() => {
+            const valoreAtt = s.quoteDetenute * s.prezzoCorrente;
+            const devAtt = Math.abs(valoreAtt - s.pesoTarget * valoreAttuale);
+            const pesoAtt = valoreAtt / valoreAttuale;
+            const devAttPerc = Math.abs(pesoAtt - s.pesoTarget);
+            return `${devAtt.toFixed(2)}€ (${(devAttPerc * 100).toFixed(1)}%)`;
+          })();
     return {
       ticker: acquisto.ticker,
       detenute: String(s.quoteDetenute),
@@ -79,6 +92,7 @@ export function formattaOutput(
       finali: String(quoteFinali),
       pesoTarget: `${(s.pesoTarget * 100).toFixed(2)}%`,
       pesoFinale: `${(pesoFin * 100).toFixed(2)}%`,
+      devAttuale,
       dev: `${devEuro.toFixed(2)}€ (${(devPerc * 100).toFixed(1)}%)`,
     };
   });
@@ -91,7 +105,8 @@ export function formattaOutput(
     finali: "Quote Finali",
     pesoTarget: "Peso Target",
     pesoFinale: "Peso Finale",
-    dev: "Dev",
+    devAttuale: "Dev attuale",
+    dev: "Dev finale",
   };
   const w = {
     strumento: Math.max(HDR.strumento.length, ...datiRighe.map((r) => r.ticker.length)),
@@ -100,6 +115,7 @@ export function formattaOutput(
     finali: Math.max(HDR.finali.length, ...datiRighe.map((r) => r.finali.length)),
     pesoTarget: Math.max(HDR.pesoTarget.length, ...datiRighe.map((r) => r.pesoTarget.length)),
     pesoFinale: Math.max(HDR.pesoFinale.length, ...datiRighe.map((r) => r.pesoFinale.length)),
+    devAttuale: Math.max(HDR.devAttuale.length, ...datiRighe.map((r) => r.devAttuale.length)),
     dev: Math.max(HDR.dev.length, ...datiRighe.map((r) => r.dev.length)),
   };
 
@@ -109,17 +125,17 @@ export function formattaOutput(
     `${HDR.strumento.padEnd(w.strumento)} | ${col(HDR.detenute, w.detenute)} | ` +
     `${col(HDR.acquistateCosto, w.acquistateCosto)} | ${col(HDR.finali, w.finali)} | ` +
     `${col(HDR.pesoTarget, w.pesoTarget)} | ${col(HDR.pesoFinale, w.pesoFinale)} | ` +
-    `${col(HDR.dev, w.dev)}`;
+    `${col(HDR.devAttuale, w.devAttuale)} | ${col(HDR.dev, w.dev)}`;
   const separatore =
     `${sep(w.strumento)}-|-${sep(w.detenute)}-|-${sep(w.acquistateCosto)}-|-` +
-    `${sep(w.finali)}-|-${sep(w.pesoTarget)}-|-${sep(w.pesoFinale)}-|-${sep(w.dev)}`;
+    `${sep(w.finali)}-|-${sep(w.pesoTarget)}-|-${sep(w.pesoFinale)}-|-${sep(w.devAttuale)}-|-${sep(w.dev)}`;
 
   const righeTabella = datiRighe.map(
     (r) =>
       `${r.ticker.padEnd(w.strumento)} | ${col(r.detenute, w.detenute)} | ` +
       `${col(r.acquistateCosto, w.acquistateCosto)} | ${col(r.finali, w.finali)} | ` +
       `${col(r.pesoTarget, w.pesoTarget)} | ${col(r.pesoFinale, w.pesoFinale)} | ` +
-      `${col(r.dev, w.dev)}`,
+      `${col(r.devAttuale, w.devAttuale)} | ${col(r.dev, w.dev)}`,
   );
 
   // Totali con € allineati
@@ -127,13 +143,19 @@ export function formattaOutput(
     (acc, s, i) => acc + output.acquisti[i]!.quoteAcquistare * s.prezzoCorrente,
     0,
   );
+  const devAttualeToTale = valoreAttuale === 0 ? null : portafoglio.reduce((acc, s) => {
+    const valoreAtt = s.quoteDetenute * s.prezzoCorrente;
+    return acc + Math.abs(valoreAtt - s.pesoTarget * valoreAttuale);
+  }, 0);
+
   const valoriTotali = [
     `${totaleSpeso.toFixed(2)}€`,
     `${output.budgetNonSpeso.toFixed(2)}€`,
+    devAttualeToTale !== null ? `${devAttualeToTale.toFixed(2)}€` : "n/a",
     `${output.deviazione.toFixed(2)}€`,
   ];
-  const maxLarghezzaValore = Math.max(...valoriTotali.map((v) => v.length));
-  const larghezzaLabel = 26;
+  const maxLarghezzaValore = Math.max(...valoriTotali.filter((v) => v !== "n/a").map((v) => v.length));
+  const larghezzaLabel = 32;
   const formattaRigaTotale = (label: string, valore: string) =>
     `${label.padEnd(larghezzaLabel)}${valore.padStart(maxLarghezzaValore)}`;
 
@@ -144,7 +166,8 @@ export function formattaOutput(
     "",
     formattaRigaTotale("Totale speso:", valoriTotali[0]!),
     formattaRigaTotale("Budget Non Speso (U):", valoriTotali[1]!),
-    formattaRigaTotale("Deviazione totale (D_€):", valoriTotali[2]!),
+    formattaRigaTotale("Deviazione attuale totale (D_€):", valoriTotali[2]!),
+    formattaRigaTotale("Deviazione finale totale (D_€):", valoriTotali[3]!),
   ].join("\n");
 }
 

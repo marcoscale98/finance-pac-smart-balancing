@@ -70,7 +70,8 @@ describe("formattaOutput", () => {
     expect(testo).toContain("Quote Finali");
     expect(testo).toContain("Peso Target");
     expect(testo).toContain("Peso Finale");
-    expect(testo).toContain("Dev");
+    expect(testo).toContain("Dev attuale");
+    expect(testo).toContain("Dev finale");
     expect(testo).toContain("EXUS.DE");
     expect(testo).toContain("IUSE.MI");
   });
@@ -83,6 +84,32 @@ describe("formattaOutput", () => {
     expect(testo).toContain("2 (112.00€)");
   });
 
+  it("Dev attuale mostra valore calcolato quando il portafoglio ha quote esistenti", () => {
+    // valoreAttuale = 2×95 + 3×56 = 190 + 168 = 358
+    // devAttuale EXUS.DE = |190 − 0.6×358| = |190 − 214.8| = 24.80€, pesoAtt = 190/358 ≈ 53.07% → dev% = |53.07% − 60%| = 6.9%
+    // devAttuale IUSE.MI = |168 − 0.4×358| = |168 − 143.2| = 24.80€, pesoAtt = 168/358 ≈ 46.93% → dev% = |46.93% − 40%| = 6.9%
+    const portafoglioConQuote: InputIterazione["portafoglio"] = [
+      { ticker: "EXUS.DE", prezzoCorrente: 95.0, quoteDetenute: 2, pesoTarget: 0.6 },
+      { ticker: "IUSE.MI", prezzoCorrente: 56.0, quoteDetenute: 3, pesoTarget: 0.4 },
+    ];
+    const testo = formattaOutput(output, portafoglioConQuote);
+    expect(testo).toContain("24.80€");
+    expect(testo).toContain("6.9%");
+  });
+
+  it("Dev attuale mostra n/a quando tutte le quoteDetenute sono zero", () => {
+    const testo = formattaOutput(output, portafoglio);
+    const righe = testo.split("\n").filter((r) => r.includes("EXUS.DE") || r.includes("IUSE.MI"));
+    expect(righe.length).toBe(2);
+    righe.forEach((r) => expect(r).toContain("n/a"));
+  });
+
+  it("colonna Dev attuale appare prima di Dev finale nell'header", () => {
+    const testo = formattaOutput(output, portafoglio);
+    const header = testo.split("\n")[0]!;
+    expect(header.indexOf("Dev attuale")).toBeLessThan(header.indexOf("Dev finale"));
+  });
+
   it("Dev mostra D_€ e D_% nella stessa cella", () => {
     const testo = formattaOutput(output, portafoglio);
     // la cella Dev deve contenere sia € che %
@@ -90,23 +117,54 @@ describe("formattaOutput", () => {
     expect(righeConDev.length).toBeGreaterThan(0);
   });
 
-  it("contiene i 3 totali con simbolo € allineato", () => {
+  it("riepilogo contiene riga Deviazione attuale totale", () => {
+    const testo = formattaOutput(output, portafoglio);
+    expect(testo).toContain("Deviazione attuale totale (D_€):");
+  });
+
+  it("riepilogo Deviazione attuale totale mostra n/a quando portafoglio a zero", () => {
+    const testo = formattaOutput(output, portafoglio);
+    const riga = testo.split("\n").find((r) => r.includes("Deviazione attuale totale"));
+    expect(riga).toContain("n/a");
+  });
+
+  it("contiene i 4 totali con simbolo € allineato", () => {
     const testo = formattaOutput(output, portafoglio);
     const righe = testo.split("\n");
 
     const rigaTotaleSpeso = righe.find((r) => r.includes("Totale speso:"));
     const rigaBudgetNonSpeso = righe.find((r) => r.includes("Budget Non Speso"));
-    const rigaDeviazione = righe.find((r) => r.includes("Deviazione totale"));
+    const rigaDevFinale = righe.find((r) => r.includes("Deviazione finale totale"));
 
     expect(rigaTotaleSpeso).toBeDefined();
     expect(rigaBudgetNonSpeso).toBeDefined();
-    expect(rigaDeviazione).toBeDefined();
+    expect(rigaDevFinale).toBeDefined();
 
     // I simboli € del valore devono essere alla stessa colonna (si usa lastIndexOf
     // perché l'etichetta "D_€" contiene già € all'interno)
     const colonnaEuro = (riga: string) => riga.lastIndexOf("€");
     expect(colonnaEuro(rigaTotaleSpeso!)).toBe(colonnaEuro(rigaBudgetNonSpeso!));
-    expect(colonnaEuro(rigaTotaleSpeso!)).toBe(colonnaEuro(rigaDeviazione!));
+    expect(colonnaEuro(rigaTotaleSpeso!)).toBe(colonnaEuro(rigaDevFinale!));
+  });
+
+  it("Deviazione finale totale e Deviazione attuale totale hanno il simbolo € allineato (portafoglio non zero)", () => {
+    const portafoglioConQuote: InputIterazione["portafoglio"] = [
+      { ticker: "EXUS.DE", prezzoCorrente: 95.0, quoteDetenute: 2, pesoTarget: 0.6 },
+      { ticker: "IUSE.MI", prezzoCorrente: 56.0, quoteDetenute: 3, pesoTarget: 0.4 },
+    ];
+    const testo = formattaOutput(output, portafoglioConQuote);
+    const righe = testo.split("\n");
+
+    const rigaDevAttuale = righe.find((r) => r.includes("Deviazione attuale totale"));
+    const rigaDevFinale = righe.find((r) => r.includes("Deviazione finale totale"));
+    const rigaTotaleSpeso = righe.find((r) => r.includes("Totale speso:"));
+
+    expect(rigaDevAttuale).toBeDefined();
+    expect(rigaDevFinale).toBeDefined();
+
+    const colonnaEuro = (riga: string) => riga.lastIndexOf("€");
+    expect(colonnaEuro(rigaDevAttuale!)).toBe(colonnaEuro(rigaDevFinale!));
+    expect(colonnaEuro(rigaDevAttuale!)).toBe(colonnaEuro(rigaTotaleSpeso!));
   });
 });
 
