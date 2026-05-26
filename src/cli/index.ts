@@ -6,6 +6,7 @@ export interface StrumentoScenario {
   ticker: string;
   pesoTarget: number;
   quoteAttuali: number;
+  quoteAcquistateFineco?: number;
 }
 
 export interface Scenario {
@@ -46,9 +47,20 @@ export function parseScenario(json: string): Scenario {
         `Scenario non valido: strumento [${i}] mancante di ticker, pesoTarget o quoteAttuali`,
       );
     }
-    const sr = s as { ticker: string; pesoTarget: number; quoteAttuali: number };
-    return { ticker: sr.ticker, pesoTarget: sr.pesoTarget, quoteAttuali: sr.quoteAttuali };
+    const sr = s as { ticker: string; pesoTarget: number; quoteAttuali: number; quoteAcquistateFineco?: number };
+    const strumento: StrumentoScenario = { ticker: sr.ticker, pesoTarget: sr.pesoTarget, quoteAttuali: sr.quoteAttuali };
+    if (sr.quoteAcquistateFineco !== undefined) {
+      strumento.quoteAcquistateFineco = sr.quoteAcquistateFineco;
+    }
+    return strumento;
   });
+
+  const conFineco = strumenti.filter((s) => s.quoteAcquistateFineco !== undefined).length;
+  if (conFineco > 0 && conFineco < strumenti.length) {
+    throw new Error(
+      "Scenario non valido: quoteAcquistateFineco deve essere presente su tutti gli strumenti o su nessuno (regola tutti-o-nessuno)",
+    );
+  }
 
   return { strumenti, budget: raw.budget, alfa: raw.alfa };
 }
