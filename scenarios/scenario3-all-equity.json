@@ -1,9 +1,9 @@
 {
   "strumenti": [
-    { "ticker": "IUSE.MI", "pesoTarget": 0.50, "quoteDetenute": 0 },
-    { "ticker": "IWRD.MI", "pesoTarget": 0.25, "quoteDetenute": 0 },
-    { "ticker": "XMME.DE", "pesoTarget": 0.15, "quoteDetenute": 0 },
-    { "ticker": "EXSA.DE", "pesoTarget": 0.10, "quoteDetenute": 0 }
+    { "ticker": "IUSE.MI", "pesoTarget": 0.50, "quoteAttuali": 0 },
+    { "ticker": "IWRD.MI", "pesoTarget": 0.25, "quoteAttuali": 0 },
+    { "ticker": "XMME.DE", "pesoTarget": 0.15, "quoteAttuali": 0 },
+    { "ticker": "EXSA.DE", "pesoTarget": 0.10, "quoteAttuali": 0 }
   ],
   "budget": 300,
   "alfa": 0.5,

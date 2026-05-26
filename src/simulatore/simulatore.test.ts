@@ -16,8 +16,8 @@ describe("simula", () => {
 
     const scenario: ScenarioSimulazione = {
       portafoglioIniziale: [
-        { ticker: "A", prezzoCorrente: 50, quoteDetenute: 2, pesoTarget: 0.6 },
-        { ticker: "B", prezzoCorrente: 20, quoteDetenute: 3, pesoTarget: 0.4 },
+        { ticker: "A", prezzoCorrente: 50, quoteAttuali: 2, pesoTarget: 0.6 },
+        { ticker: "B", prezzoCorrente: 20, quoteAttuali: 3, pesoTarget: 0.4 },
       ],
       budget: 100,
       durataInMesi: 1,
@@ -60,7 +60,7 @@ describe("simula", () => {
 
     const scenario: ScenarioSimulazione = {
       portafoglioIniziale: [
-        { ticker: "A", prezzoCorrente: 100, quoteDetenute: 0, pesoTarget: 1 },
+        { ticker: "A", prezzoCorrente: 100, quoteAttuali: 0, pesoTarget: 1 },
       ],
       budget: 100,
       durataInMesi: 2,
@@ -94,7 +94,7 @@ describe("simula", () => {
 
     const scenario: ScenarioSimulazione = {
       portafoglioIniziale: [
-        { ticker: "A", prezzoCorrente: 60, quoteDetenute: 0, pesoTarget: 1 },
+        { ticker: "A", prezzoCorrente: 60, quoteAttuali: 0, pesoTarget: 1 },
       ],
       budget: 100,
       durataInMesi: 2,
@@ -120,8 +120,8 @@ describe("simula", () => {
 
     const scenario: ScenarioSimulazione = {
       portafoglioIniziale: [
-        { ticker: "WORLD", prezzoCorrente: 80,  quoteDetenute: 0, pesoTarget: 0.5 },
-        { ticker: "GOLD",  prezzoCorrente: 350, quoteDetenute: 0, pesoTarget: 0.5 },
+        { ticker: "WORLD", prezzoCorrente: 80,  quoteAttuali: 0, pesoTarget: 0.5 },
+        { ticker: "GOLD",  prezzoCorrente: 350, quoteAttuali: 0, pesoTarget: 0.5 },
       ],
       budget: 400,
       durataInMesi: 1,
@@ -147,7 +147,7 @@ describe("simula", () => {
 
     const scenario: ScenarioSimulazione = {
       portafoglioIniziale: [
-        { ticker: "A", prezzoCorrente: 50, quoteDetenute: 0, pesoTarget: 1 },
+        { ticker: "A", prezzoCorrente: 50, quoteAttuali: 0, pesoTarget: 1 },
       ],
       budget: 100,
       durataInMesi: 1,

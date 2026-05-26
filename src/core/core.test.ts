@@ -10,8 +10,8 @@ describe("decideIterazione", () => {
     // alfa=0.25 (minimizza budget non speso): 5 WORLD (U=0, D_€=400, costo=0.25*400=100)
     //   è preferibile a non comprare nulla (costo=0.75*400=300). Spesa=400€.
     const portafoglio = [
-      { ticker: "WORLD", prezzoCorrente: 80,  quoteDetenute: 0, pesoTarget: 0.5 },
-      { ticker: "GOLD",  prezzoCorrente: 350, quoteDetenute: 0, pesoTarget: 0.5 },
+      { ticker: "WORLD", prezzoCorrente: 80,  quoteAttuali: 0, pesoTarget: 0.5 },
+      { ticker: "GOLD",  prezzoCorrente: 350, quoteAttuali: 0, pesoTarget: 0.5 },
     ];
     const budget = 400;
 
@@ -28,8 +28,8 @@ describe("decideIterazione", () => {
   it("alfa=0 produce spesa >= alfa=1 a parità di scenario", () => {
     const base = {
       portafoglio: [
-        { ticker: "A", prezzoCorrente: 70, quoteDetenute: 0, pesoTarget: 0.6 },
-        { ticker: "B", prezzoCorrente: 30, quoteDetenute: 0, pesoTarget: 0.4 },
+        { ticker: "A", prezzoCorrente: 70, quoteAttuali: 0, pesoTarget: 0.6 },
+        { ticker: "B", prezzoCorrente: 30, quoteAttuali: 0, pesoTarget: 0.4 },
       ],
       budget: 200,
     };
@@ -45,8 +45,8 @@ describe("decideIterazione", () => {
 
   it("U e D_€ restituiti sono coerenti con ricalcolo esterno", () => {
     const portafoglio = [
-      { ticker: "A", prezzoCorrente: 40, quoteDetenute: 1, pesoTarget: 0.7 },
-      { ticker: "B", prezzoCorrente: 15, quoteDetenute: 2, pesoTarget: 0.3 },
+      { ticker: "A", prezzoCorrente: 40, quoteAttuali: 1, pesoTarget: 0.7 },
+      { ticker: "B", prezzoCorrente: 15, quoteAttuali: 2, pesoTarget: 0.3 },
     ];
     const budget = 120;
 
@@ -57,7 +57,7 @@ describe("decideIterazione", () => {
     const quoteFinali: Record<string, number> = {};
     for (const s of portafoglio) {
       const acquisto = output.acquisti.find((a) => a.ticker === s.ticker)!;
-      quoteFinali[s.ticker] = s.quoteDetenute + acquisto.quoteAcquistare;
+      quoteFinali[s.ticker] = s.quoteAttuali + acquisto.quoteAcquistare;
     }
 
     const valoreFinale = portafoglio.reduce(
@@ -70,7 +70,7 @@ describe("decideIterazione", () => {
       return acc + Math.abs(vEff - vTarget);
     }, 0);
     const speso = portafoglio.reduce(
-      (acc, s) => acc + (quoteFinali[s.ticker]! - s.quoteDetenute) * prezzi[s.ticker]!,
+      (acc, s) => acc + (quoteFinali[s.ticker]! - s.quoteAttuali) * prezzi[s.ticker]!,
       0,
     );
     const uAtteso = budget - speso;
@@ -90,8 +90,8 @@ describe("decideIterazione", () => {
     // Verifichiamo che l'output rispecchi U=10 e D_€=0
     const output = decideIterazione({
       portafoglio: [
-        { ticker: "A", prezzoCorrente: 50, quoteDetenute: 2, pesoTarget: 0.6 },
-        { ticker: "B", prezzoCorrente: 20, quoteDetenute: 3, pesoTarget: 0.4 },
+        { ticker: "A", prezzoCorrente: 50, quoteAttuali: 2, pesoTarget: 0.6 },
+        { ticker: "B", prezzoCorrente: 20, quoteAttuali: 3, pesoTarget: 0.4 },
       ],
       budget: 100,
       alfa: 0.5,
@@ -106,8 +106,8 @@ describe("decideIterazione", () => {
   it("allocazione degenere (1 strumento al 100%): acquista solo quello strumento", () => {
     const output = decideIterazione({
       portafoglio: [
-        { ticker: "UNICO", prezzoCorrente: 40, quoteDetenute: 0, pesoTarget: 1 },
-        { ticker: "ZERO", prezzoCorrente: 25, quoteDetenute: 0, pesoTarget: 0 },
+        { ticker: "UNICO", prezzoCorrente: 40, quoteAttuali: 0, pesoTarget: 1 },
+        { ticker: "ZERO", prezzoCorrente: 25, quoteAttuali: 0, pesoTarget: 0 },
       ],
       budget: 100,
       alfa: 0.5,
@@ -119,11 +119,11 @@ describe("decideIterazione", () => {
     expect(acquistoZero!.quoteAcquistare).toBe(0);
   });
 
-  it("portafoglio vuoto (quoteDetenute = 0): acquista almeno una quota se il budget lo permette", () => {
+  it("portafoglio vuoto (quoteAttuali = 0): acquista almeno una quota se il budget lo permette", () => {
     const output = decideIterazione({
       portafoglio: [
-        { ticker: "A", prezzoCorrente: 50, quoteDetenute: 0, pesoTarget: 0.5 },
-        { ticker: "B", prezzoCorrente: 30, quoteDetenute: 0, pesoTarget: 0.5 },
+        { ticker: "A", prezzoCorrente: 50, quoteAttuali: 0, pesoTarget: 0.5 },
+        { ticker: "B", prezzoCorrente: 30, quoteAttuali: 0, pesoTarget: 0.5 },
       ],
       budget: 100,
       alfa: 0,
@@ -139,8 +139,8 @@ describe("decideIterazione", () => {
   it("strumento con prezzo > budget riceve 0 quote", () => {
     const output = decideIterazione({
       portafoglio: [
-        { ticker: "GOLD", prezzoCorrente: 450, quoteDetenute: 0, pesoTarget: 0.1 },
-        { ticker: "SP500", prezzoCorrente: 50, quoteDetenute: 0, pesoTarget: 0.9 },
+        { ticker: "GOLD", prezzoCorrente: 450, quoteAttuali: 0, pesoTarget: 0.1 },
+        { ticker: "SP500", prezzoCorrente: 50, quoteAttuali: 0, pesoTarget: 0.9 },
       ],
       budget: 400,
       alfa: 0.5,
@@ -153,8 +153,8 @@ describe("decideIterazione", () => {
   it("le quote acquistate sono sempre interi non negativi", () => {
     const output = decideIterazione({
       portafoglio: [
-        { ticker: "A", prezzoCorrente: 37, quoteDetenute: 2, pesoTarget: 0.5 },
-        { ticker: "B", prezzoCorrente: 13, quoteDetenute: 5, pesoTarget: 0.5 },
+        { ticker: "A", prezzoCorrente: 37, quoteAttuali: 2, pesoTarget: 0.5 },
+        { ticker: "B", prezzoCorrente: 13, quoteAttuali: 5, pesoTarget: 0.5 },
       ],
       budget: 150,
       alfa: 0.5,
@@ -169,8 +169,8 @@ describe("decideIterazione", () => {
   it("vincolo duro: la spesa non supera mai il budget", () => {
     const output = decideIterazione({
       portafoglio: [
-        { ticker: "A", prezzoCorrente: 30, quoteDetenute: 0, pesoTarget: 0.6 },
-        { ticker: "B", prezzoCorrente: 17, quoteDetenute: 0, pesoTarget: 0.4 },
+        { ticker: "A", prezzoCorrente: 30, quoteAttuali: 0, pesoTarget: 0.6 },
+        { ticker: "B", prezzoCorrente: 17, quoteAttuali: 0, pesoTarget: 0.4 },
       ],
       budget: 100,
       alfa: 0,
@@ -187,7 +187,7 @@ describe("decideIterazione", () => {
     // Budget 100€, 1 strumento a 30€ → max 3 quote (90€ spesi, 10€ non spesi)
     const output = decideIterazione({
       portafoglio: [
-        { ticker: "A", prezzoCorrente: 30, quoteDetenute: 0, pesoTarget: 1 },
+        { ticker: "A", prezzoCorrente: 30, quoteAttuali: 0, pesoTarget: 1 },
       ],
       budget: 100,
       alfa: 0,

@@ -5,7 +5,7 @@ import { decideIterazione, type InputIterazione } from "../core/index.js";
 export interface StrumentoScenario {
   ticker: string;
   pesoTarget: number;
-  quoteDetenute: number;
+  quoteAttuali: number;
 }
 
 export interface Scenario {
@@ -40,14 +40,14 @@ export function parseScenario(json: string): Scenario {
       s === null ||
       typeof (s as Record<string, unknown>)["ticker"] !== "string" ||
       typeof (s as Record<string, unknown>)["pesoTarget"] !== "number" ||
-      typeof (s as Record<string, unknown>)["quoteDetenute"] !== "number"
+      typeof (s as Record<string, unknown>)["quoteAttuali"] !== "number"
     ) {
       throw new Error(
-        `Scenario non valido: strumento [${i}] mancante di ticker, pesoTarget o quoteDetenute`,
+        `Scenario non valido: strumento [${i}] mancante di ticker, pesoTarget o quoteAttuali`,
       );
     }
-    const sr = s as { ticker: string; pesoTarget: number; quoteDetenute: number };
-    return { ticker: sr.ticker, pesoTarget: sr.pesoTarget, quoteDetenute: sr.quoteDetenute };
+    const sr = s as { ticker: string; pesoTarget: number; quoteAttuali: number };
+    return { ticker: sr.ticker, pesoTarget: sr.pesoTarget, quoteAttuali: sr.quoteAttuali };
   });
 
   return { strumenti, budget: raw.budget, alfa: raw.alfa };
@@ -59,17 +59,17 @@ export function formattaOutput(
 ): string {
   // Calcola valore finale portafoglio per la D_€ per strumento
   const valoreFinale = portafoglio.reduce(
-    (acc, s, i) => acc + (s.quoteDetenute + output.acquisti[i]!.quoteAcquistare) * s.prezzoCorrente,
+    (acc, s, i) => acc + (s.quoteAttuali + output.acquisti[i]!.quoteAcquistare) * s.prezzoCorrente,
     0,
   );
 
   // Valore attuale portafoglio (pre-iterazione)
-  const valoreAttuale = portafoglio.reduce((acc, s) => acc + s.quoteDetenute * s.prezzoCorrente, 0);
+  const valoreAttuale = portafoglio.reduce((acc, s) => acc + s.quoteAttuali * s.prezzoCorrente, 0);
 
   // Dati riga per ogni strumento
   const datiRighe = output.acquisti.map((acquisto, i) => {
     const s = portafoglio[i]!;
-    const quoteFinali = s.quoteDetenute + acquisto.quoteAcquistare;
+    const quoteFinali = s.quoteAttuali + acquisto.quoteAcquistare;
     const costo = acquisto.quoteAcquistare * s.prezzoCorrente;
     const valoreFin = quoteFinali * s.prezzoCorrente;
     const devEuro = Math.abs(valoreFin - s.pesoTarget * valoreFinale);
@@ -79,7 +79,7 @@ export function formattaOutput(
       valoreAttuale === 0
         ? "n/a"
         : (() => {
-            const valoreAtt = s.quoteDetenute * s.prezzoCorrente;
+            const valoreAtt = s.quoteAttuali * s.prezzoCorrente;
             const devAtt = Math.abs(valoreAtt - s.pesoTarget * valoreAttuale);
             const pesoAtt = valoreAtt / valoreAttuale;
             const devAttPerc = Math.abs(pesoAtt - s.pesoTarget);
@@ -87,7 +87,7 @@ export function formattaOutput(
           })();
     return {
       ticker: acquisto.ticker,
-      detenute: String(s.quoteDetenute),
+      detenute: String(s.quoteAttuali),
       acquistateCosto: `${acquisto.quoteAcquistare} (${costo.toFixed(2)}€)`,
       finali: String(quoteFinali),
       pesoTarget: `${(s.pesoTarget * 100).toFixed(2)}%`,
@@ -144,7 +144,7 @@ export function formattaOutput(
     0,
   );
   const devAttualeToTale = valoreAttuale === 0 ? null : portafoglio.reduce((acc, s) => {
-    const valoreAtt = s.quoteDetenute * s.prezzoCorrente;
+    const valoreAtt = s.quoteAttuali * s.prezzoCorrente;
     return acc + Math.abs(valoreAtt - s.pesoTarget * valoreAttuale);
   }, 0);
 
@@ -176,7 +176,7 @@ export async function eseguiScenario(scenario: Scenario): Promise<string> {
     scenario.strumenti.map(async (s) => ({
       ticker: s.ticker,
       prezzoCorrente: await prezzoCorrente(s.ticker),
-      quoteDetenute: s.quoteDetenute,
+      quoteAttuali: s.quoteAttuali,
       pesoTarget: s.pesoTarget,
     })),
   );

@@ -1,7 +1,7 @@
 export interface Strumento {
   ticker: string;
   prezzoCorrente: number;
-  quoteDetenute: number;
+  quoteAttuali: number;
   pesoTarget: number;
 }
 
@@ -28,11 +28,11 @@ export function decideIterazione(input: InputIterazione): OutputIterazione {
       const u = budgetRimanente;
 
       const valoreFinale = portafoglio.reduce(
-        (acc, s, i) => acc + (s.quoteDetenute + acquisti[i]!) * s.prezzoCorrente,
+        (acc, s, i) => acc + (s.quoteAttuali + acquisti[i]!) * s.prezzoCorrente,
         0,
       );
       const d = portafoglio.reduce((acc, s, i) => {
-        const valoreEffettivo = (s.quoteDetenute + acquisti[i]!) * s.prezzoCorrente;
+        const valoreEffettivo = (s.quoteAttuali + acquisti[i]!) * s.prezzoCorrente;
         const valoreTarget = s.pesoTarget * valoreFinale;
         return acc + Math.abs(valoreEffettivo - valoreTarget);
       }, 0);
@@ -62,11 +62,11 @@ export function decideIterazione(input: InputIterazione): OutputIterazione {
   const budgetNonSpeso = budget - speso;
 
   const valoreFinale = portafoglio.reduce(
-    (acc, s, i) => acc + (s.quoteDetenute + miglioreAcquisti[i]!) * s.prezzoCorrente,
+    (acc, s, i) => acc + (s.quoteAttuali + miglioreAcquisti[i]!) * s.prezzoCorrente,
     0,
   );
   const deviazione = portafoglio.reduce((acc, s, i) => {
-    const valoreEffettivo = (s.quoteDetenute + miglioreAcquisti[i]!) * s.prezzoCorrente;
+    const valoreEffettivo = (s.quoteAttuali + miglioreAcquisti[i]!) * s.prezzoCorrente;
     const valoreTarget = s.pesoTarget * valoreFinale;
     return acc + Math.abs(valoreEffettivo - valoreTarget);
   }, 0);
