@@ -6,6 +6,7 @@ import { simula, type ScenarioSimulazione } from "./simulatore/index.js";
 import { generateReport } from "./report/index.js";
 import { prezziPerDate } from "./prezzi/index.js";
 import { applicaOverrideCli } from "./cli/override.js";
+import { parseStoricoAcquistiFineco } from "./storico-fineco/index.js";
 
 function scenariDisponibili(): string[] {
   return readdirSync("scenarios")
@@ -35,7 +36,14 @@ async function simulaFile(percorso: string, overrideArgs: string[] = []): Promis
     dataInizio: scenarioRaw.dataInizio,
   };
 
-  const risultato = await simula(scenarioSimulazione, prezziPerDate);
+  let acquisizioniFineco: Map<string, Record<string, number>> | undefined;
+  if (scenarioRaw.percorsoTransazioniFineco) {
+    const csvPath = resolve(scenarioRaw.percorsoTransazioniFineco);
+    const csv = readFileSync(csvPath, "utf-8");
+    acquisizioniFineco = parseStoricoAcquistiFineco(csv);
+  }
+
+  const risultato = await simula(scenarioSimulazione, prezziPerDate, acquisizioniFineco);
   const outputPath = resolve("output", `${nome}.html`);
   await generateReport(risultato, outputPath);
   console.log(`  → ${outputPath}`);

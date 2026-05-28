@@ -27,8 +27,8 @@ describe("simula", () => {
 
     const risultato = await simula(scenario, prezziPerDateMock);
 
-    expect(risultato).toHaveLength(1);
-    const serie = risultato[0]!;
+    expect(risultato.serieAlfa).toHaveLength(1);
+    const serie = risultato.serieAlfa[0]!;
     expect(serie.alfa).toBe(0.5);
 
     expect(serie.mesi).toHaveLength(1);
@@ -69,7 +69,7 @@ describe("simula", () => {
     };
 
     const risultato = await simula(scenario, prezziPerDateMock);
-    const mesi = risultato[0]!.mesi;
+    const mesi = risultato.serieAlfa[0]!.mesi;
 
     expect(mesi).toHaveLength(2);
     expect(mesi[0]!.valorePortafoglio).toBeCloseTo(100);  // 1 quota × 100€
@@ -103,7 +103,7 @@ describe("simula", () => {
     };
 
     const risultato = await simula(scenario, prezziPerDateMock);
-    const mesi = risultato[0]!.mesi;
+    const mesi = risultato.serieAlfa[0]!.mesi;
 
     // Senza carryover: spesa totale = 60 + 60 = 120€
     expect(mesi[1]!.spesaCumulativa).toBeCloseTo(120);
@@ -131,15 +131,97 @@ describe("simula", () => {
 
     const risultato = await simula(scenario, prezziPerDateMock);
 
-    expect(risultato).toHaveLength(3);
-    expect(risultato[0]!.alfa).toBe(0.25);
-    expect(risultato[1]!.alfa).toBe(0.5);
-    expect(risultato[2]!.alfa).toBe(0.75);
+    expect(risultato.serieAlfa).toHaveLength(3);
+    expect(risultato.serieAlfa[0]!.alfa).toBe(0.25);
+    expect(risultato.serieAlfa[1]!.alfa).toBe(0.5);
+    expect(risultato.serieAlfa[2]!.alfa).toBe(0.75);
 
     // alfa=0.25 spende tutto (minimizza U), alfa=0.75 spende 0 (minimizza D_€)
-    const spesa025 = risultato[0]!.mesi[0]!.spesaCumulativa;
-    const spesa075 = risultato[2]!.mesi[0]!.spesaCumulativa;
+    const spesa025 = risultato.serieAlfa[0]!.mesi[0]!.spesaCumulativa;
+    const spesa075 = risultato.serieAlfa[2]!.mesi[0]!.spesaCumulativa;
     expect(spesa025).toBeGreaterThan(spesa075 + 50);
+  });
+
+  it("con acquisizioniFineco completa (K = N): serieFineco ha N mesi con metriche corrette", async () => {
+    // 1 strumento A a 100€, CSV acquista 1 quota a gennaio 2024
+    // Portafoglio iniziale: 0 quote
+    // Dopo mese 1: 1 quota × 100€ = 100€, spesa = 100€, deviazione = 0 (unico strumento)
+    const dataMese = new Date("2024-01-15");
+
+    const prezziPerDateMock = vi.fn().mockImplementation(
+      async (_ticker: string, date: Date[]): Promise<Quotazione[]> =>
+        date.map((d) => ({ data: d, prezzo: 100 })),
+    );
+
+    const acquisizioniFineco = new Map<string, Record<string, number>>();
+    acquisizioniFineco.set("2024-01", { A: 1 });
+
+    const scenario: ScenarioSimulazione = {
+      portafoglioIniziale: [
+        { ticker: "A", prezzoCorrente: 100, quoteAttuali: 0, pesoTarget: 1 },
+      ],
+      budget: 100,
+      durataInMesi: 1,
+      grigliaDiAlfa: [0.5],
+      dataInizio: dataMese,
+    };
+
+    const risultato = await simula(scenario, prezziPerDateMock, acquisizioniFineco);
+
+    expect(risultato.serieFineco).toHaveLength(1);
+    const mese = risultato.serieFineco![0]!;
+    expect(mese.valorePortafoglio).toBeCloseTo(100);
+    expect(mese.spesaCumulativa).toBeCloseTo(100);
+    expect(mese.budgetTeoricoConsumato).toBeCloseTo(100);
+    expect(mese.deviazioneMedia).toBeCloseTo(0);
+    expect(mese.deviazioneMediaPercentuale).toBeCloseTo(0);
+  });
+
+  it("con acquisizioniFineco parziale (K < N): serieFineco si tronca a K mesi", async () => {
+    // CSV copre solo gennaio 2024, simulazione dura 2 mesi
+    const prezziPerDateMock = vi.fn().mockImplementation(
+      async (_ticker: string, date: Date[]): Promise<Quotazione[]> =>
+        date.map((d) => ({ data: d, prezzo: 100 })),
+    );
+
+    const acquisizioniFineco = new Map<string, Record<string, number>>();
+    acquisizioniFineco.set("2024-01", { A: 1 });
+    // nessuna riga per "2024-02"
+
+    const scenario: ScenarioSimulazione = {
+      portafoglioIniziale: [
+        { ticker: "A", prezzoCorrente: 100, quoteAttuali: 0, pesoTarget: 1 },
+      ],
+      budget: 100,
+      durataInMesi: 2,
+      grigliaDiAlfa: [0.5],
+      dataInizio: new Date("2024-01-15"),
+    };
+
+    const risultato = await simula(scenario, prezziPerDateMock, acquisizioniFineco);
+
+    expect(risultato.serieFineco).toHaveLength(1);
+    expect(risultato.serieAlfa[0]!.mesi).toHaveLength(2);
+  });
+
+  it("senza acquisizioniFineco: serieFineco è undefined", async () => {
+    const prezziPerDateMock = vi.fn().mockImplementation(
+      async (_ticker: string, date: Date[]): Promise<Quotazione[]> =>
+        date.map((d) => ({ data: d, prezzo: 100 })),
+    );
+
+    const scenario: ScenarioSimulazione = {
+      portafoglioIniziale: [
+        { ticker: "A", prezzoCorrente: 100, quoteAttuali: 0, pesoTarget: 1 },
+      ],
+      budget: 100,
+      durataInMesi: 1,
+      grigliaDiAlfa: [0.5],
+      dataInizio: new Date("2024-01-15"),
+    };
+
+    const risultato = await simula(scenario, prezziPerDateMock);
+    expect(risultato.serieFineco).toBeUndefined();
   });
 
   it("buco nei prezzi: se prezziPerDate restituisce array vuoto, simula lancia un errore", async () => {
