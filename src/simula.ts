@@ -10,7 +10,6 @@ import { parseStoricoAcquistiFineco } from "./storico-fineco/index.js";
 
 interface OpzioniOverride {
   budget?: number;
-  alfa?: number;
   durataInMesi?: number;
   grigliaDiAlfa?: number[];
   dataInizio?: string;
@@ -31,7 +30,6 @@ async function simulaFile(percorso: string, override: OpzioniOverride = {}): Pro
   const base = JSON.parse(json) as Record<string, unknown>;
 
   if (override.budget !== undefined) base.budget = override.budget;
-  if (override.alfa !== undefined) base.alfa = override.alfa;
   if (override.durataInMesi !== undefined) base.durataInMesi = override.durataInMesi;
   if (override.grigliaDiAlfa !== undefined) base.grigliaDiAlfa = override.grigliaDiAlfa;
   if (override.dataInizio !== undefined) base.dataInizio = override.dataInizio;
@@ -72,7 +70,6 @@ new Command()
   .argument("[scenario]", "Percorso al file scenario JSON (senza arg: menu interattivo)")
   .option("--all", "Esegue tutti gli scenari in scenarios/")
   .option("--budget <n>", "Sovrascrive budget mensile in euro", parseFloat)
-  .option("--alfa <n>", "Sovrascrive alfa (0–1)", parseFloat)
   .option("--durataInMesi <n>", "Sovrascrive durataInMesi", (v) => parseInt(v, 10))
   .option("--grigliaDiAlfa <json>", "Sovrascrive grigliaDiAlfa (array JSON)", (v) => JSON.parse(v) as number[])
   .option("--dataInizio <YYYY-MM-DD>", "Sovrascrive dataInizio")
