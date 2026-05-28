@@ -5,6 +5,7 @@ import { parseScenarioCompleto } from "./scenarios/index.js";
 import { simula, type ScenarioSimulazione } from "./simulatore/index.js";
 import { generateReport } from "./report/index.js";
 import { prezziPerDate } from "./prezzi/index.js";
+import { applicaOverrideCli } from "./cli/override.js";
 
 function scenariDisponibili(): string[] {
   return readdirSync("scenarios")
@@ -12,12 +13,14 @@ function scenariDisponibili(): string[] {
     .sort();
 }
 
-async function simulaFile(percorso: string): Promise<void> {
+async function simulaFile(percorso: string, overrideArgs: string[] = []): Promise<void> {
   const nome = basename(percorso, ".json");
   console.log(`\nSimulazione: ${nome}`);
 
   const json = readFileSync(percorso, "utf-8");
-  const scenarioRaw = parseScenarioCompleto(json);
+  const base = JSON.parse(json) as Record<string, unknown>;
+  const merged = applicaOverrideCli(base, overrideArgs);
+  const scenarioRaw = parseScenarioCompleto(JSON.stringify(merged));
 
   const scenarioSimulazione: ScenarioSimulazione = {
     portafoglioIniziale: scenarioRaw.strumenti.map((s) => ({
@@ -57,7 +60,8 @@ async function main() {
   }
 
   if (arg) {
-    await simulaFile(resolve(arg));
+    const overrideArgs = process.argv.slice(3);
+    await simulaFile(resolve(arg), overrideArgs);
     return;
   }
 
