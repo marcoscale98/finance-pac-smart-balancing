@@ -86,5 +86,6 @@
             "Bash(npm run typecheck *)",
             "Bash(gh repo view *)"
         ]
-    }
+    },
+    "worktree": {"baseRef": "head"}
 }
