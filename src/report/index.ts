@@ -96,7 +96,18 @@ function buildHtml(result: SimulationResult): string {
     .join(",\n");
   const dsBudget = [dsTeoricoBase, dsEffettivi].join(",\n");
 
-  // Grafico 3: Deviazione media in euro
+  // Grafico 3: Budget non speso mensile
+  const dsBudgetNonSpeso = result
+    .map((serie, i) =>
+      dataset(
+        `α = ${serie.alfa}`,
+        serie.mesi.map((m) => Math.round(m.budgetNonSpeso * 100) / 100),
+        COLORI[i % COLORI.length]!,
+      ),
+    )
+    .join(",\n");
+
+  // Grafico 4: Deviazione media in euro
   const dsDeviazione = result
     .map((serie, i) =>
       dataset(
@@ -107,7 +118,7 @@ function buildHtml(result: SimulationResult): string {
     )
     .join(",\n");
 
-  // Grafico 4: Deviazione media percentuale
+  // Grafico 5: Deviazione media percentuale
   const dsDeviazionePerc = result
     .map((serie, i) =>
       dataset(
@@ -155,8 +166,9 @@ function buildHtml(result: SimulationResult): string {
   <script>const ETICHETTE = ${JSON.stringify(labels)};</script>
   ${grafico("g1", "Valore del portafoglio nel tempo", dsValore, "€")}
   ${grafico("g2", "Budget cumulativo: teorico vs speso", dsBudget, "€")}
-  ${grafico("g3", "Deviazione media dai target nel tempo (€)", dsDeviazione, "€ (media per strumento)", "Scostamento medio in euro tra il Valore Finale e il Valore Target di ciascuno strumento. Il Valore Target è la quota del portafoglio che lo strumento dovrebbe occupare secondo l'Allocazione Target (es. 40% World, 30% S&amp;P500…).")}
-  ${grafico("g4", "Deviazione media dai target nel tempo (%)", dsDeviazionePerc, "% (media per strumento)", "Stesso scostamento del grafico precedente, espresso in punti percentuali rispetto al valore totale del portafoglio — equivale alla differenza media tra Peso Finale e Peso Target di ciascuno strumento.")}
+  ${grafico("g3", "Budget non speso per mese", dsBudgetNonSpeso, "€")}
+  ${grafico("g4", "Deviazione media dai target nel tempo (€)", dsDeviazione, "€ (media per strumento)", "Scostamento medio in euro tra il Valore Finale e il Valore Target di ciascuno strumento. Il Valore Target è la quota del portafoglio che lo strumento dovrebbe occupare secondo l'Allocazione Target (es. 40% World, 30% S&amp;P500…).")}
+  ${grafico("g5", "Deviazione media dai target nel tempo (%)", dsDeviazionePerc, "% (media per strumento)", "Stesso scostamento del grafico precedente, espresso in punti percentuali rispetto al valore totale del portafoglio — equivale alla differenza media tra Peso Finale e Peso Target di ciascuno strumento.")}
 </body>
 </html>`;
 }

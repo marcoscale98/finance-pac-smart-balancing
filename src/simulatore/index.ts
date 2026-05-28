@@ -15,6 +15,7 @@ export interface MetricaMensile {
   valorePortafoglio: number;
   spesaCumulativa: number;
   budgetTeoricoConsumato: number;
+  budgetNonSpeso: number;
   deviazioneMedia: number;
   deviazioneMediaPercentuale: number;
 }
@@ -84,6 +85,7 @@ async function simulaSerie(
       valorePortafoglio,
       spesaCumulativa,
       budgetTeoricoConsumato: (i + 1) * scenario.budget,
+      budgetNonSpeso: output.budgetNonSpeso,
       deviazioneMedia: output.deviazione / portafoglio.length,
       deviazioneMediaPercentuale: valorePortafoglio > 0
         ? (output.deviazione / valorePortafoglio) / portafoglio.length
