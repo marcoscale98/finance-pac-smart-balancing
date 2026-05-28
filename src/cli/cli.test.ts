@@ -112,10 +112,24 @@ describe("formattaOutput", () => {
     expect(testo).toContain("2 (112.00€)");
   });
 
-  it("Tabella Quote: footer contiene Totale speso e Budget Non Speso", () => {
+  it("Tabella Quote: riga Totale mostra quote e costo aggregati", () => {
     const testo = formattaOutput(output, portafoglio);
-    expect(testo).toContain("Totale speso:");
-    expect(testo).toContain("Budget Non Speso");
+    // quote acquistate totali: 3+2=5, costo: 3×95+2×56=397
+    expect(testo).toContain("5 (397.00€)");
+    const righe = testo.split("\n");
+    const rigaTotale = righe.find((r) => r.trimStart().startsWith("Totale"));
+    expect(rigaTotale).toBeDefined();
+  });
+
+  it("Tabella Quote: riga Budget non speso mostra importo non speso", () => {
+    const testo = formattaOutput(output, portafoglio);
+    // budgetNonSpeso = 17.00€
+    expect(testo).toContain("Budget non speso");
+    expect(testo).toContain("17.00€");
+    const righe = testo.split("\n");
+    const rigaBudget = righe.find((r) => r.startsWith("Budget non speso"));
+    expect(rigaBudget).toBeDefined();
+    expect(rigaBudget).toContain("17.00€");
   });
 
   // --- Tabella Pesi ---
@@ -148,10 +162,10 @@ describe("formattaOutput", () => {
 
   // --- Tabella Deviazioni ---
 
-  it("Tabella Deviazioni: header contiene Dev Attuale e Dev Finale", () => {
+  it("Tabella Deviazioni: header contiene Deviazione Attuale e Deviazione Finale", () => {
     const testo = formattaOutput(output, portafoglio);
-    expect(testo).toContain("Dev Attuale");
-    expect(testo).toContain("Dev Finale");
+    expect(testo).toContain("Deviazione Attuale");
+    expect(testo).toContain("Deviazione Finale");
   });
 
   it("Tabella Deviazioni: Dev Attuale mostra valore calcolato quando portafoglio ha quote esistenti", () => {
@@ -167,11 +181,14 @@ describe("formattaOutput", () => {
     expect(testo).toContain("6.9%");
   });
 
-  it("Tabella Deviazioni: Dev Attuale mostra n/a quando tutte le quoteAttuali sono zero", () => {
+  it("Tabella Deviazioni: riga Totale mostra n/a per Deviazione Attuale quando quoteAttuali sono zero", () => {
     const testo = formattaOutput(output, portafoglio);
-    expect(testo).toContain("Deviazione attuale totale");
-    const rigaDevAttuale = testo.split("\n").find((r) => r.includes("Deviazione attuale totale"));
-    expect(rigaDevAttuale).toContain("n/a");
+    // Quando tutte le quoteAttuali sono 0, la deviazione attuale non è definita
+    // La riga Totale della tabella Deviazioni contiene "%" (a differenza del riepilogo)
+    const righe = testo.split("\n");
+    const rigaTotaleD = righe.find((r) => r.trimStart().startsWith("Totale") && r.includes("%"));
+    expect(rigaTotaleD).toBeDefined();
+    expect(rigaTotaleD).toContain("n/a");
   });
 
   it("Tabella Deviazioni: Dev mostra D_€ e D_% nella stessa cella", () => {
@@ -181,36 +198,36 @@ describe("formattaOutput", () => {
     expect(righeConDev.length).toBeGreaterThan(0);
   });
 
-  it("Tabella Deviazioni: footer contiene Deviazione attuale totale e Deviazione finale totale", () => {
+  it("Tabella Deviazioni: riga Totale mostra deviazione finale con percentuale", () => {
+    // valoreFinale = 3×95 + 2×56 = 397, deviazione = 8.5, dev% = 8.5/397 = 2.1%
     const testo = formattaOutput(output, portafoglio);
-    expect(testo).toContain("Deviazione attuale totale");
-    expect(testo).toContain("Deviazione finale totale");
+    const righe = testo.split("\n");
+    const rigaTotaleD = righe.find((r) => r.trimStart().startsWith("Totale") && r.includes("%"));
+    expect(rigaTotaleD).toBeDefined();
+    expect(rigaTotaleD).toContain("8.50€");
+    expect(rigaTotaleD).toContain("2.1%");
   });
 
-  it("Tabella Deviazioni: € dei totali allineati alla stessa colonna", () => {
+  it("Tabella Deviazioni: riga Totale mostra deviazione attuale con percentuale quando il portafoglio ha quote", () => {
+    // valoreAttuale = 2×95 + 3×56 = 190+168 = 358
+    // devAttuale EXUS.DE = |190 − 0.6×358| = 24.80, devAttuale IUSE.MI = |168 − 0.4×358| = 24.80
+    // totale devAttuale = 49.60, dev% = 49.60/358 = 13.9%
     const portafoglioConQuote: InputIterazione["portafoglio"] = [
       { ticker: "EXUS.DE", prezzoCorrente: 95.0, quoteAttuali: 2, pesoTarget: 0.6 },
       { ticker: "IUSE.MI", prezzoCorrente: 56.0, quoteAttuali: 3, pesoTarget: 0.4 },
     ];
     const testo = formattaOutput(output, portafoglioConQuote);
     const righe = testo.split("\n");
-    const rigaDevAttuale = righe.find((r) => r.includes("Deviazione attuale totale"));
-    const rigaDevFinale = righe.find((r) => r.includes("Deviazione finale totale"));
-    expect(rigaDevAttuale).toBeDefined();
-    expect(rigaDevFinale).toBeDefined();
-    const colonnaEuro = (riga: string) => riga.lastIndexOf("€");
-    expect(colonnaEuro(rigaDevAttuale!)).toBe(colonnaEuro(rigaDevFinale!));
+    const rigaTotaleD = righe.find((r) => r.trimStart().startsWith("Totale") && r.includes("%"));
+    expect(rigaTotaleD).toBeDefined();
+    expect(rigaTotaleD).toContain("49.60€");
+    expect(rigaTotaleD).toContain("13.9%");
   });
 
-  it("Tabella Quote: € dei totali allineati alla stessa colonna", () => {
+  it("Tabella Quote: senza Fineco, non contiene 'Totale speso:' come riga standalone", () => {
     const testo = formattaOutput(output, portafoglio);
-    const righe = testo.split("\n");
-    const rigaTotaleSpeso = righe.find((r) => r.includes("Totale speso:"));
-    const rigaBudgetNonSpeso = righe.find((r) => r.includes("Budget Non Speso"));
-    expect(rigaTotaleSpeso).toBeDefined();
-    expect(rigaBudgetNonSpeso).toBeDefined();
-    const colonnaEuro = (riga: string) => riga.lastIndexOf("€");
-    expect(colonnaEuro(rigaTotaleSpeso!)).toBe(colonnaEuro(rigaBudgetNonSpeso!));
+    // "Totale speso:" appare solo nel riepilogo comparativo, che richiede Fineco
+    expect(testo).not.toContain("Totale speso:");
   });
 
   // --- Colonne Fineco ---
@@ -237,6 +254,24 @@ describe("formattaOutput", () => {
       expect(testo).toContain("Quote Finali Fineco");
     });
 
+    it("Tabella Quote: riga Totale include quote e costo Fineco aggregati", () => {
+      const testo = formattaOutput(output, portafoglio, finecoAcquisti);
+      // finecoAcquisti=[2,1]: totale quote=3, costo=2×95+1×56=246
+      const righe = testo.split("\n");
+      const rigaTotale = righe.find((r) => r.trimStart().startsWith("Totale"));
+      expect(rigaTotale).toBeDefined();
+      expect(rigaTotale).toContain("3 (246.00€)");
+    });
+
+    it("Tabella Quote: riga Budget non speso include importo non speso Fineco", () => {
+      const testo = formattaOutput(output, portafoglio, finecoAcquisti);
+      // budget=414, totaleSpestoFineco=246, budgetNonSpesoFineco=168
+      const righe = testo.split("\n");
+      const rigaBudget = righe.find((r) => r.startsWith("Budget non speso"));
+      expect(rigaBudget).toBeDefined();
+      expect(rigaBudget).toContain("168.00€");
+    });
+
     it("Tabella Quote: valori corretti per quote e costo Fineco", () => {
       const testo = formattaOutput(output, portafoglio, finecoAcquisti);
       // EXUS.DE: 2 quote × 95€ = 190.00€
@@ -260,9 +295,20 @@ describe("formattaOutput", () => {
       expect(testo).toContain("22.76%");
     });
 
-    it("Tabella Deviazioni: header contiene Dev Finale Fineco", () => {
+    it("Tabella Deviazioni: header contiene Deviazione Finale Fineco", () => {
       const testo = formattaOutput(output, portafoglio, finecoAcquisti);
-      expect(testo).toContain("Dev Finale Fineco");
+      expect(testo).toContain("Deviazione Finale Fineco");
+    });
+
+    it("Tabella Deviazioni: riga Totale include deviazione Fineco con percentuale", () => {
+      // deviazioneFinecoTotale = 42.40+42.40=84.80, valoreFinaleFineco=246
+      // dev% = 84.80/246 = 34.5%
+      const testo = formattaOutput(output, portafoglio, finecoAcquisti);
+      const righe = testo.split("\n");
+      const rigaTotaleD = righe.find((r) => r.trimStart().startsWith("Totale") && r.includes("%"));
+      expect(rigaTotaleD).toBeDefined();
+      expect(rigaTotaleD).toContain("84.80€");
+      expect(rigaTotaleD).toContain("34.5%");
     });
 
     it("Tabella Deviazioni: Dev Finale Fineco mostra € e % nella stessa cella", () => {
@@ -306,22 +352,39 @@ describe("formattaOutput", () => {
       expect(testo).not.toContain("Acquistate Fineco");
       expect(testo).not.toContain("Quote Finali Fineco");
       expect(testo).not.toContain("Peso Finale Fineco");
-      expect(testo).not.toContain("Dev Finale Fineco");
+      expect(testo).not.toContain("Deviazione Finale Fineco");
       expect(testo).not.toContain("Mio Algoritmo");
     });
   });
 
   // --- dataIterazione nell'output ---
 
-  it("con dataIterazione → prima riga dell'output contiene la data ISO", () => {
+  it("con dataIterazione → prima riga contiene la data ISO e il budget", () => {
     const testo = formattaOutput(output, portafoglio, undefined, new Date("2025-03-15"));
     const primaRiga = testo.split("\n")[0]!;
+    // budget = 3×95 + 2×56 + 17 = 414
     expect(primaRiga).toContain("2025-03-15");
+    expect(primaRiga).toContain("Budget: 414€");
   });
 
   it("senza dataIterazione → output non contiene riga della data", () => {
     const testo = formattaOutput(output, portafoglio);
     expect(testo).not.toMatch(/Iterazione del/);
+  });
+
+  it("con dataEffettiva diversa da dataIterazione → intestazione mostra data effettiva e nota mercato chiuso", () => {
+    const testo = formattaOutput(output, portafoglio, undefined, new Date("2025-03-15"), new Date("2025-03-17T07:00:00.000Z"));
+    const primaRiga = testo.split("\n")[0]!;
+    expect(primaRiga).toContain("2025-03-17");
+    expect(primaRiga).toContain("2025-03-15");
+    expect(primaRiga).toContain("mercato chiuso");
+  });
+
+  it("con dataEffettiva uguale a dataIterazione → intestazione non contiene nota mercato chiuso", () => {
+    const testo = formattaOutput(output, portafoglio, undefined, new Date("2025-03-15"), new Date("2025-03-15"));
+    const primaRiga = testo.split("\n")[0]!;
+    expect(primaRiga).not.toContain("mercato chiuso");
+    expect(primaRiga).toContain("2025-03-15");
   });
 
   // --- Ordine delle 3 tabelle ---
@@ -330,7 +393,7 @@ describe("formattaOutput", () => {
     const testo = formattaOutput(output, portafoglio);
     const posQuote = testo.indexOf("Quote Attuali");
     const posPesi = testo.indexOf("Peso Attuale");
-    const posDev = testo.indexOf("Dev Attuale");
+    const posDev = testo.indexOf("Deviazione Attuale");
     expect(posQuote).toBeLessThan(posPesi);
     expect(posPesi).toBeLessThan(posDev);
   });
@@ -379,6 +442,27 @@ describe("eseguiScenario (smoke test E2E)", () => {
 
     expect(mockPrezzoCorrente).toHaveBeenCalledTimes(2);
     expect(mockPrezziPerDate).not.toHaveBeenCalled();
+  });
+
+  it("con mercato chiuso → output mostra data effettiva e nota mercato chiuso", async () => {
+    const mockPrezziPerDate = vi.mocked(prezzi.prezziPerDate);
+    mockPrezziPerDate.mockResolvedValueOnce([{ data: new Date("2025-03-17T07:00:00.000Z"), prezzo: 50.0 }]);
+    mockPrezziPerDate.mockResolvedValueOnce([{ data: new Date("2025-03-17T07:00:00.000Z"), prezzo: 50.0 }]);
+
+    const scenario = {
+      strumenti: [
+        { ticker: "EXUS.DE", pesoTarget: 0.6, quoteAttuali: 0 },
+        { ticker: "IUSE.MI", pesoTarget: 0.4, quoteAttuali: 0 },
+      ],
+      budget: 400,
+      alfa: 0.5,
+      dataIterazione: new Date("2025-03-15"),
+    };
+
+    const testo = await eseguiScenario(scenario);
+    expect(testo).toContain("2025-03-17");
+    expect(testo).toContain("2025-03-15");
+    expect(testo).toContain("mercato chiuso");
   });
 
   it("con prezzoCorrente mockato → output non vuoto con i ticker degli strumenti", async () => {
