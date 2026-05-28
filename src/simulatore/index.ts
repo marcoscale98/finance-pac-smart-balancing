@@ -25,9 +25,24 @@ export interface SerieAlfa {
   mesi: MetricaMensile[];
 }
 
-export type SimulationResult = SerieAlfa[];
+export interface SimulationResult {
+  serieAlfa: SerieAlfa[];
+  serieFineco?: MetricaMensile[];
+}
 
 type FnPrezziPerDate = (ticker: string, date: Date[]) => Promise<Quotazione[]>;
+
+function annoMese(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function calcolaDeviazione(portafoglio: Strumento[], valorePortafoglio: number): number {
+  return portafoglio.reduce((acc, s) => {
+    const valoreEffettivo = s.quoteAttuali * s.prezzoCorrente;
+    const valoreTarget = s.pesoTarget * valorePortafoglio;
+    return acc + Math.abs(valoreEffettivo - valoreTarget);
+  }, 0);
+}
 
 function dateIterazioni(dataInizio: Date, durataInMesi: number): Date[] {
   return Array.from({ length: durataInMesi }, (_, i) => {
@@ -96,12 +111,82 @@ async function simulaSerie(
   return { alfa, mesi };
 }
 
+async function simulaFineco(
+  scenario: ScenarioSimulazione,
+  date: Date[],
+  prezziPerDate: FnPrezziPerDate,
+  acquisizioniFineco: Map<string, Record<string, number>>,
+): Promise<MetricaMensile[]> {
+  let portafoglio: Strumento[] = scenario.portafoglioIniziale.map((s) => ({ ...s }));
+  const mesi: MetricaMensile[] = [];
+  let spesaCumulativa = 0;
+
+  for (let i = 0; i < date.length; i++) {
+    const dataNominale = date[i]!;
+    const chiave = annoMese(dataNominale);
+    const acquistiMese = acquisizioniFineco.get(chiave);
+
+    if (!acquistiMese) break;
+
+    const quotazioni: Record<string, Quotazione> = {};
+    for (const s of portafoglio) {
+      const risultati = await prezziPerDate(s.ticker, [dataNominale]);
+      if (risultati.length === 0) {
+        throw new Error(`Prezzo mancante per ${s.ticker} al ${dataNominale.toISOString()}`);
+      }
+      quotazioni[s.ticker] = risultati[0]!;
+    }
+
+    portafoglio = portafoglio.map((s) => ({
+      ...s,
+      prezzoCorrente: quotazioni[s.ticker]!.prezzo,
+    }));
+
+    const spesaMese = portafoglio.reduce((acc, s) => {
+      return acc + (acquistiMese[s.ticker] ?? 0) * s.prezzoCorrente;
+    }, 0);
+
+    portafoglio = portafoglio.map((s) => ({
+      ...s,
+      quoteAttuali: s.quoteAttuali + (acquistiMese[s.ticker] ?? 0),
+    }));
+
+    spesaCumulativa += spesaMese;
+
+    const valorePortafoglio = portafoglio.reduce(
+      (acc, s) => acc + s.quoteAttuali * s.prezzoCorrente,
+      0,
+    );
+
+    const deviazione = calcolaDeviazione(portafoglio, valorePortafoglio);
+    const dataEffettiva = quotazioni[portafoglio[0]!.ticker]!.data;
+
+    mesi.push({
+      data: dataEffettiva,
+      valorePortafoglio,
+      spesaCumulativa,
+      budgetTeoricoConsumato: (i + 1) * scenario.budget,
+      budgetNonSpeso: Math.max(0, scenario.budget - spesaMese),
+      deviazioneMedia: deviazione / portafoglio.length,
+      deviazioneMediaPercentuale: valorePortafoglio > 0
+        ? (deviazione / valorePortafoglio) / portafoglio.length
+        : 0,
+    });
+  }
+
+  return mesi;
+}
+
 export async function simula(
   scenario: ScenarioSimulazione,
   prezziPerDate: FnPrezziPerDate,
+  acquisizioniFineco?: Map<string, Record<string, number>>,
 ): Promise<SimulationResult> {
   const date = dateIterazioni(scenario.dataInizio, scenario.durataInMesi);
-  return Promise.all(
+  const serieAlfa = await Promise.all(
     scenario.grigliaDiAlfa.map((alfa) => simulaSerie(alfa, scenario, date, prezziPerDate)),
   );
+  if (!acquisizioniFineco) return { serieAlfa };
+  const serieFineco = await simulaFineco(scenario, date, prezziPerDate, acquisizioniFineco);
+  return { serieAlfa, serieFineco };
 }

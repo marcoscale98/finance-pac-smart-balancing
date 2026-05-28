@@ -11,8 +11,10 @@ export async function generateReport(
   await writeFile(outputPath, html, "utf-8");
 }
 
+export { buildHtml };
+
 function etichette(result: SimulationResult): string[] {
-  const prima = result[0];
+  const prima = result.serieAlfa[0];
   if (!prima || prima.mesi.length === 0) return [];
   return prima.mesi.map((m) =>
     m.data.toLocaleDateString("it-IT", { year: "numeric", month: "short" }),
@@ -67,25 +69,43 @@ function grafico(id: string, titolo: string, datasetsJs: string, labelY: string,
 
 function buildHtml(result: SimulationResult): string {
   const labels = etichette(result);
+  const { serieAlfa, serieFineco } = result;
+
+  const dsFineco = serieFineco
+    ? dataset("Fineco", serieFineco.map((m) => Math.round(m.valorePortafoglio * 100) / 100), "#000000")
+    : null;
+  const dsFinecoSpesa = serieFineco
+    ? dataset("Fineco", serieFineco.map((m) => Math.round(m.spesaCumulativa * 100) / 100), "#000000")
+    : null;
+  const dsFinecoBudgetNonSpeso = serieFineco
+    ? dataset("Fineco", serieFineco.map((m) => Math.round(m.budgetNonSpeso * 100) / 100), "#000000")
+    : null;
+  const dsFinecoDeviazione = serieFineco
+    ? dataset("Fineco", serieFineco.map((m) => Math.round(m.deviazioneMedia * 100) / 100), "#000000")
+    : null;
+  const dsFinecoDeviazionePerc = serieFineco
+    ? dataset("Fineco", serieFineco.map((m) => Math.round(m.deviazioneMediaPercentuale * 10000) / 100), "#000000")
+    : null;
 
   // Grafico 1: Valore portafoglio
-  const dsValore = result
-    .map((serie, i) =>
+  const dsValore = [
+    ...serieAlfa.map((serie, i) =>
       dataset(
         `α = ${serie.alfa}`,
         serie.mesi.map((m) => Math.round(m.valorePortafoglio * 100) / 100),
         COLORI[i % COLORI.length]!,
       ),
-    )
-    .join(",\n");
+    ),
+    ...(dsFineco ? [dsFineco] : []),
+  ].join(",\n");
 
   // Grafico 2: Budget cumulativo teorico vs effettivo
   const budgetTeorico =
-    result[0]?.mesi.map((m) => Math.round(m.budgetTeoricoConsumato * 100) / 100) ?? [];
+    serieAlfa[0]?.mesi.map((m) => Math.round(m.budgetTeoricoConsumato * 100) / 100) ?? [];
   const dsTeoricoBase = dataset("Budget teorico", budgetTeorico, "#6b7280", {
     borderDash: [6, 3],
   });
-  const dsEffettivi = result
+  const dsEffettivi = serieAlfa
     .map((serie, i) =>
       dataset(
         `Effettivo α = ${serie.alfa}`,
@@ -94,40 +114,43 @@ function buildHtml(result: SimulationResult): string {
       ),
     )
     .join(",\n");
-  const dsBudget = [dsTeoricoBase, dsEffettivi].join(",\n");
+  const dsBudget = [dsTeoricoBase, dsEffettivi, ...(dsFinecoSpesa ? [dsFinecoSpesa] : [])].join(",\n");
 
   // Grafico 3: Budget non speso mensile
-  const dsBudgetNonSpeso = result
-    .map((serie, i) =>
+  const dsBudgetNonSpeso = [
+    ...serieAlfa.map((serie, i) =>
       dataset(
         `α = ${serie.alfa}`,
         serie.mesi.map((m) => Math.round(m.budgetNonSpeso * 100) / 100),
         COLORI[i % COLORI.length]!,
       ),
-    )
-    .join(",\n");
+    ),
+    ...(dsFinecoBudgetNonSpeso ? [dsFinecoBudgetNonSpeso] : []),
+  ].join(",\n");
 
   // Grafico 4: Deviazione media in euro
-  const dsDeviazione = result
-    .map((serie, i) =>
+  const dsDeviazione = [
+    ...serieAlfa.map((serie, i) =>
       dataset(
         `α = ${serie.alfa}`,
         serie.mesi.map((m) => Math.round(m.deviazioneMedia * 100) / 100),
         COLORI[i % COLORI.length]!,
       ),
-    )
-    .join(",\n");
+    ),
+    ...(dsFinecoDeviazione ? [dsFinecoDeviazione] : []),
+  ].join(",\n");
 
   // Grafico 5: Deviazione media percentuale
-  const dsDeviazionePerc = result
-    .map((serie, i) =>
+  const dsDeviazionePerc = [
+    ...serieAlfa.map((serie, i) =>
       dataset(
         `α = ${serie.alfa}`,
         serie.mesi.map((m) => Math.round(m.deviazioneMediaPercentuale * 10000) / 100),
         COLORI[i % COLORI.length]!,
       ),
-    )
-    .join(",\n");
+    ),
+    ...(dsFinecoDeviazionePerc ? [dsFinecoDeviazionePerc] : []),
+  ].join(",\n");
 
   return `<!DOCTYPE html>
 <html lang="it">
