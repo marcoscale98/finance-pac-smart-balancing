@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { prezzoCorrente } from "../prezzi/index.js";
+import { prezzoCorrente, prezziPerDate } from "../prezzi/index.js";
 import { decideIterazione, type InputIterazione } from "../core/index.js";
 
 export interface StrumentoScenario {
@@ -13,6 +13,7 @@ export interface Scenario {
   strumenti: StrumentoScenario[];
   budget: number;
   alfa: number;
+  dataIterazione?: Date;
 }
 
 export function parseScenario(json: string): Scenario {
@@ -33,7 +34,14 @@ export function parseScenario(json: string): Scenario {
     throw new Error("Scenario non valido: campi obbligatori mancanti (strumenti, budget, alfa)");
   }
 
-  const raw = dati as { strumenti: unknown[]; budget: number; alfa: number };
+  if (
+    (dati as Record<string, unknown>)["dataIterazione"] !== undefined &&
+    typeof (dati as Record<string, unknown>)["dataIterazione"] !== "string"
+  ) {
+    throw new Error("Scenario non valido: dataIterazione deve essere una stringa ISO (es. \"2025-03-15\")");
+  }
+
+  const raw = dati as { strumenti: unknown[]; budget: number; alfa: number; dataIterazione?: string };
 
   const strumenti = raw.strumenti.map((s, i) => {
     if (
@@ -62,13 +70,18 @@ export function parseScenario(json: string): Scenario {
     );
   }
 
-  return { strumenti, budget: raw.budget, alfa: raw.alfa };
+  const risultato: Scenario = { strumenti, budget: raw.budget, alfa: raw.alfa };
+  if (raw.dataIterazione !== undefined) {
+    risultato.dataIterazione = new Date(raw.dataIterazione);
+  }
+  return risultato;
 }
 
 export function formattaOutput(
   output: ReturnType<typeof decideIterazione>,
   portafoglio: InputIterazione["portafoglio"],
   finecoAcquisti?: number[],
+  dataIterazione?: Date,
 ): string {
   const valoreAttuale = portafoglio.reduce((acc, s) => acc + s.quoteAttuali * s.prezzoCorrente, 0);
   const valoreFinale = portafoglio.reduce(
@@ -313,7 +326,12 @@ export function formattaOutput(
     );
   }
 
+  const intestazioneData = dataIterazione
+    ? [`Iterazione del ${dataIterazione.toISOString().slice(0, 10)}`, ""]
+    : [];
+
   return [
+    ...intestazioneData,
     headerQ,
     separatoreQ,
     ...righeQ,
@@ -336,21 +354,36 @@ export function formattaOutput(
 }
 
 export async function eseguiScenario(scenario: Scenario): Promise<string> {
-  const portafoglio: InputIterazione["portafoglio"] = await Promise.all(
-    scenario.strumenti.map(async (s) => ({
+  let portafoglio: InputIterazione["portafoglio"];
+
+  if (scenario.dataIterazione !== undefined) {
+    const data = scenario.dataIterazione;
+    const quotazioni = await Promise.all(
+      scenario.strumenti.map((s) => prezziPerDate(s.ticker, [data])),
+    );
+    portafoglio = scenario.strumenti.map((s, i) => ({
       ticker: s.ticker,
-      prezzoCorrente: await prezzoCorrente(s.ticker),
+      prezzoCorrente: quotazioni[i]![0]!.prezzo,
       quoteAttuali: s.quoteAttuali,
       pesoTarget: s.pesoTarget,
-    })),
-  );
+    }));
+  } else {
+    portafoglio = await Promise.all(
+      scenario.strumenti.map(async (s) => ({
+        ticker: s.ticker,
+        prezzoCorrente: await prezzoCorrente(s.ticker),
+        quoteAttuali: s.quoteAttuali,
+        pesoTarget: s.pesoTarget,
+      })),
+    );
+  }
 
   const finecoAcquisti = scenario.strumenti[0]?.quoteAcquistateFineco !== undefined
     ? scenario.strumenti.map((s) => s.quoteAcquistateFineco!)
     : undefined;
 
   const output = decideIterazione({ portafoglio, budget: scenario.budget, alfa: scenario.alfa });
-  return formattaOutput(output, portafoglio, finecoAcquisti);
+  return formattaOutput(output, portafoglio, finecoAcquisti, scenario.dataIterazione);
 }
 
 async function main(args: string[]): Promise<void> {

@@ -1,9 +1,13 @@
 import { describe, it, expect, vi } from "vitest";
 import { parseScenario, formattaOutput, eseguiScenario } from "./index.js";
 import type { InputIterazione, OutputIterazione } from "../core/index.js";
+import * as prezzi from "../prezzi/index.js";
 
 vi.mock("../prezzi/index.js", () => ({
   prezzoCorrente: vi.fn().mockResolvedValue(50.0),
+  prezziPerDate: vi.fn().mockImplementation((_ticker: string, date: Date[]) =>
+    Promise.resolve(date.map((d) => ({ data: d, prezzo: 50.0 }))),
+  ),
 }));
 
 const scenarioValido = JSON.stringify({
@@ -34,6 +38,33 @@ describe("parseScenario", () => {
   it("campo obbligatorio mancante → throw con messaggio leggibile", () => {
     const senzaBudget = JSON.stringify({ strumenti: [], alfa: 0.5 });
     expect(() => parseScenario(senzaBudget)).toThrow("campi obbligatori mancanti");
+  });
+
+  it("dataIterazione ISO valida → campo parsato come Date", () => {
+    const json = JSON.stringify({
+      strumenti: [{ ticker: "EXUS.DE", pesoTarget: 0.5, quoteAttuali: 0 }],
+      budget: 400,
+      alfa: 0.5,
+      dataIterazione: "2025-03-15",
+    });
+    const scenario = parseScenario(json);
+    expect(scenario.dataIterazione).toBeInstanceOf(Date);
+    expect(scenario.dataIterazione!.toISOString()).toContain("2025-03-15");
+  });
+
+  it("senza dataIterazione → campo undefined", () => {
+    const scenario = parseScenario(scenarioValido);
+    expect(scenario.dataIterazione).toBeUndefined();
+  });
+
+  it("dataIterazione non stringa → throw con messaggio leggibile", () => {
+    const json = JSON.stringify({
+      strumenti: [{ ticker: "EXUS.DE", pesoTarget: 0.5, quoteAttuali: 0 }],
+      budget: 400,
+      alfa: 0.5,
+      dataIterazione: 20250315,
+    });
+    expect(() => parseScenario(json)).toThrow("dataIterazione");
   });
 
   it("strumento con campo mancante → throw con messaggio leggibile", () => {
@@ -280,6 +311,19 @@ describe("formattaOutput", () => {
     });
   });
 
+  // --- dataIterazione nell'output ---
+
+  it("con dataIterazione → prima riga dell'output contiene la data ISO", () => {
+    const testo = formattaOutput(output, portafoglio, undefined, new Date("2025-03-15"));
+    const primaRiga = testo.split("\n")[0]!;
+    expect(primaRiga).toContain("2025-03-15");
+  });
+
+  it("senza dataIterazione → output non contiene riga della data", () => {
+    const testo = formattaOutput(output, portafoglio);
+    expect(testo).not.toMatch(/Iterazione del/);
+  });
+
   // --- Ordine delle 3 tabelle ---
 
   it("le 3 tabelle appaiono nell'ordine: Quote → Pesi → Deviazioni", () => {
@@ -293,6 +337,50 @@ describe("formattaOutput", () => {
 });
 
 describe("eseguiScenario (smoke test E2E)", () => {
+  it("con dataIterazione → chiama prezziPerDate e non prezzoCorrente", async () => {
+    const mockPrezzoCorrente = vi.mocked(prezzi.prezzoCorrente);
+    const mockPrezziPerDate = vi.mocked(prezzi.prezziPerDate);
+    mockPrezzoCorrente.mockClear();
+    mockPrezziPerDate.mockClear();
+
+    const scenario = {
+      strumenti: [
+        { ticker: "EXUS.DE", pesoTarget: 0.6, quoteAttuali: 0 },
+        { ticker: "IUSE.MI", pesoTarget: 0.4, quoteAttuali: 0 },
+      ],
+      budget: 400,
+      alfa: 0.5,
+      dataIterazione: new Date("2025-03-15"),
+    };
+
+    const testo = await eseguiScenario(scenario);
+
+    expect(mockPrezzoCorrente).not.toHaveBeenCalled();
+    expect(mockPrezziPerDate).toHaveBeenCalledTimes(2);
+    expect(testo).toContain("2025-03-15");
+  });
+
+  it("senza dataIterazione → chiama prezzoCorrente e non prezziPerDate", async () => {
+    const mockPrezzoCorrente = vi.mocked(prezzi.prezzoCorrente);
+    const mockPrezziPerDate = vi.mocked(prezzi.prezziPerDate);
+    mockPrezzoCorrente.mockClear();
+    mockPrezziPerDate.mockClear();
+
+    const scenario = {
+      strumenti: [
+        { ticker: "EXUS.DE", pesoTarget: 0.6, quoteAttuali: 0 },
+        { ticker: "IUSE.MI", pesoTarget: 0.4, quoteAttuali: 0 },
+      ],
+      budget: 400,
+      alfa: 0.5,
+    };
+
+    await eseguiScenario(scenario);
+
+    expect(mockPrezzoCorrente).toHaveBeenCalledTimes(2);
+    expect(mockPrezziPerDate).not.toHaveBeenCalled();
+  });
+
   it("con prezzoCorrente mockato → output non vuoto con i ticker degli strumenti", async () => {
     const scenario = {
       strumenti: [
