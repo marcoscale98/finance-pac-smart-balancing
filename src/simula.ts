@@ -43,9 +43,16 @@ async function main() {
   const arg = process.argv[2];
 
   if (arg === "--all") {
-    for (const file of scenariDisponibili())
-      await simulaFile(resolve("scenarios", file));
-    console.log("\nReport generati in output/");
+    let generati = 0;
+    for (const file of scenariDisponibili()) {
+      try {
+        await simulaFile(resolve("scenarios", file));
+        generati++;
+      } catch (err) {
+        console.warn(`  ⚠ Saltato (${err instanceof Error ? err.message : err})`);
+      }
+    }
+    console.log(`\nReport generati in output/ (${generati} su ${scenariDisponibili().length})`);
     return;
   }
 
