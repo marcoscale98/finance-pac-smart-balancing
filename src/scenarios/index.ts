@@ -4,6 +4,7 @@ export interface ScenarioCompleto extends Scenario {
   grigliaDiAlfa: number[];
   durataInMesi: number;
   dataInizio: Date;
+  percorsoTransazioniFineco?: string;
 }
 
 export function parseScenarioCompleto(json: string): ScenarioCompleto {
@@ -28,10 +29,16 @@ export function parseScenarioCompleto(json: string): ScenarioCompleto {
     throw new Error("Scenario non valido: dataInizio deve essere una stringa ISO (es. \"2023-01-01\")");
   }
 
+  const percorsoTransazioniFineco =
+    typeof dati["percorsoTransazioniFineco"] === "string"
+      ? dati["percorsoTransazioniFineco"]
+      : undefined;
+
   return {
     ...base,
     grigliaDiAlfa: dati["grigliaDiAlfa"] as number[],
     durataInMesi: dati["durataInMesi"],
     dataInizio: new Date(dati["dataInizio"]),
+    ...(percorsoTransazioniFineco !== undefined && { percorsoTransazioniFineco }),
   };
 }

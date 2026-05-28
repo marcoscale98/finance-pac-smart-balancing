@@ -133,6 +133,33 @@ describe("parseScenario — quoteAcquistateFineco", () => {
   });
 });
 
+describe("parseScenarioCompleto — percorsoTransazioniFineco", () => {
+  const base = {
+    strumenti: [{ ticker: "EXUS.DE", pesoTarget: 1.0, quoteAttuali: 0 }],
+    budget: 400,
+    alfa: 0.5,
+    grigliaDiAlfa: [0.5],
+    durataInMesi: 12,
+    dataInizio: "2023-01-01",
+  };
+
+  it("campo presente → percorsoTransazioniFineco parsato come stringa", () => {
+    const json = JSON.stringify({ ...base, percorsoTransazioniFineco: "storico.csv" });
+
+    const scenario = parseScenarioCompleto(json);
+
+    expect(scenario.percorsoTransazioniFineco).toBe("storico.csv");
+  });
+
+  it("campo assente → scenario valido, percorsoTransazioniFineco undefined", () => {
+    const json = JSON.stringify(base);
+
+    const scenario = parseScenarioCompleto(json);
+
+    expect(scenario.percorsoTransazioniFineco).toBeUndefined();
+  });
+});
+
 describe("file scenario JSON", () => {
   const scenarioFiles = [
     "scenario1-marco",
