@@ -20,7 +20,7 @@ npm test               # esegui test suite (Vitest)
 npm run test:watch     # test in watch mode
 npm run typecheck      # tsc --noEmit
 npm run iterazione <scenario> # esegui una Iterazione su un file scenario JSON (es. scenarios/scenario1-marco.json)
-npm run simulate:all   # simula tutti e 4 gli scenari e genera HTML in output/
+npm run simulazione:all   # simula tutti e 4 gli scenari e genera HTML in output/
 ```
 
 Per eseguire un singolo file di test:
