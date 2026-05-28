@@ -146,6 +146,10 @@ _Avoid_: `getCurrentPrice`, `getHistoricalPrices`, serie storica generica.
 Una coppia `{ data: Date; prezzo: number }` — il prezzo di uno **Strumento** in un determinato giorno. Unità restituita da `prezziPerDate`.
 _Avoid_: `PricePoint`, `HistoricalEntry`.
 
+**Storico Acquisti Fineco**:
+File CSV in formato wide che registra, mese per mese, quante **Quote** il PAC di Fineco ha acquistato per ogni **Strumento**. Una riga per mese, una colonna per ticker (più la colonna `data`). Compilato manualmente dall'utente dopo ogni esecuzione del PAC su Fineco. Usato dal **Simulatore** per aggiungere ai grafici una linea di confronto con Fineco. Il matching tra la data del CSV e il mese di simulazione avviene per anno-mese (YYYY-MM), ignorando il giorno. Se il CSV copre meno mesi della simulazione, la linea Fineco si interrompe dove finiscono i dati.
+_Avoid_: log Fineco, registro transazioni, storico prezzi.
+
 ## Flagged ambiguities
 
 - "Budget" inizialmente è stato discusso sia come "tetto massimo" sia come "obiettivo di spesa" — risolto: è un **vincolo duro** (mai sforare), e l'algoritmo è incentivato a spendere il più possibile tramite il termine `U` nella funzione di costo.
