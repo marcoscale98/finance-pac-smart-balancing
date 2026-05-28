@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { Command } from "commander";
 import { prezzoCorrente, prezziPerDate } from "../prezzi/index.js";
 import { decideIterazione, type InputIterazione } from "../core/index.js";
 
@@ -426,25 +427,24 @@ export async function eseguiScenario(scenario: Scenario): Promise<string> {
   return formattaOutput(output, portafoglio, finecoAcquisti, scenario.dataIterazione, dataEffettiva);
 }
 
-async function main(args: string[]): Promise<void> {
-  const percorso = args[0];
-  if (!percorso) {
-    console.error("Uso: cli <path/to/scenario.json>");
-    process.exit(1);
-  }
-
-  let scenario: Scenario;
-  try {
-    const contenuto = readFileSync(percorso, "utf-8");
-    scenario = parseScenario(contenuto);
-  } catch (err) {
-    console.error((err as Error).message);
-    process.exit(1);
-  }
-
-  const testo = await eseguiScenario(scenario);
-  console.log(testo);
-}
+const programma = new Command()
+  .name("iterazione")
+  .description("Esegue una singola iterazione di acquisto sul portafoglio")
+  .argument("<scenario>", "Percorso al file scenario JSON")
+  .option("--data <YYYY-MM-DD>", "Sovrascrive dataIterazione nello scenario")
+  .action(async (percorso: string, opzioni: { data?: string }) => {
+    let scenario: Scenario;
+    try {
+      const contenuto = readFileSync(percorso, "utf-8");
+      scenario = parseScenario(contenuto);
+    } catch (err) {
+      console.error((err as Error).message);
+      process.exit(1);
+    }
+    if (opzioni.data) scenario.dataIterazione = new Date(opzioni.data);
+    const testo = await eseguiScenario(scenario);
+    console.log(testo);
+  });
 
 // Esegui solo quando invocato direttamente (non durante i test)
 const isEntryPoint =
@@ -452,5 +452,5 @@ const isEntryPoint =
   (process.argv[1].endsWith("cli/index.ts") || process.argv[1].endsWith("cli/index.js"));
 
 if (isEntryPoint) {
-  main(process.argv.slice(2));
+  programma.parseAsync(process.argv);
 }

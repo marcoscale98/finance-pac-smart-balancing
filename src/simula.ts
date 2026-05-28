@@ -1,12 +1,21 @@
 import { readFileSync, mkdirSync, readdirSync } from "node:fs";
 import { resolve, basename } from "node:path";
 import { createInterface } from "node:readline/promises";
+import { Command } from "commander";
 import { parseScenarioCompleto } from "./scenarios/index.js";
 import { simula, type ScenarioSimulazione } from "./simulatore/index.js";
 import { generateReport } from "./report/index.js";
 import { prezziPerDate } from "./prezzi/index.js";
-import { applicaOverrideCli } from "./cli/override.js";
 import { parseStoricoAcquistiFineco } from "./storico-fineco/index.js";
+
+interface OpzioniOverride {
+  budget?: number;
+  alfa?: number;
+  durataInMesi?: number;
+  grigliaDiAlfa?: number[];
+  dataInizio?: string;
+  percorsoTransazioniFineco?: string;
+}
 
 function scenariDisponibili(): string[] {
   return readdirSync("scenarios")
@@ -14,14 +23,22 @@ function scenariDisponibili(): string[] {
     .sort();
 }
 
-async function simulaFile(percorso: string, overrideArgs: string[] = []): Promise<void> {
+async function simulaFile(percorso: string, override: OpzioniOverride = {}): Promise<void> {
   const nome = basename(percorso, ".json");
   console.log(`\nSimulazione: ${nome}`);
 
   const json = readFileSync(percorso, "utf-8");
   const base = JSON.parse(json) as Record<string, unknown>;
-  const merged = applicaOverrideCli(base, overrideArgs);
-  const scenarioRaw = parseScenarioCompleto(JSON.stringify(merged));
+
+  if (override.budget !== undefined) base.budget = override.budget;
+  if (override.alfa !== undefined) base.alfa = override.alfa;
+  if (override.durataInMesi !== undefined) base.durataInMesi = override.durataInMesi;
+  if (override.grigliaDiAlfa !== undefined) base.grigliaDiAlfa = override.grigliaDiAlfa;
+  if (override.dataInizio !== undefined) base.dataInizio = override.dataInizio;
+  if (override.percorsoTransazioniFineco !== undefined)
+    base.percorsoTransazioniFineco = override.percorsoTransazioniFineco;
+
+  const scenarioRaw = parseScenarioCompleto(JSON.stringify(base));
 
   const scenarioSimulazione: ScenarioSimulazione = {
     portafoglioIniziale: scenarioRaw.strumenti.map((s) => ({
@@ -49,48 +66,57 @@ async function simulaFile(percorso: string, overrideArgs: string[] = []): Promis
   console.log(`  → ${outputPath}`);
 }
 
-async function main() {
-  mkdirSync("output", { recursive: true });
-  const arg = process.argv[2];
+new Command()
+  .name("simulazione")
+  .description("Simula N iterazioni mensili e genera un report HTML in output/")
+  .argument("[scenario]", "Percorso al file scenario JSON (senza arg: menu interattivo)")
+  .option("--all", "Esegue tutti gli scenari in scenarios/")
+  .option("--budget <n>", "Sovrascrive budget mensile in euro", parseFloat)
+  .option("--alfa <n>", "Sovrascrive alfa (0–1)", parseFloat)
+  .option("--durataInMesi <n>", "Sovrascrive durataInMesi", (v) => parseInt(v, 10))
+  .option("--grigliaDiAlfa <json>", "Sovrascrive grigliaDiAlfa (array JSON)", (v) => JSON.parse(v) as number[])
+  .option("--dataInizio <YYYY-MM-DD>", "Sovrascrive dataInizio")
+  .option("--percorsoTransazioniFineco <path>", "Sovrascrive percorsoTransazioniFineco")
+  .action(async (scenario: string | undefined, opzioni: OpzioniOverride & { all?: boolean }) => {
+    mkdirSync("output", { recursive: true });
 
-  if (arg === "--all") {
-    let generati = 0;
-    for (const file of scenariDisponibili()) {
-      try {
-        await simulaFile(resolve("scenarios", file));
-        generati++;
-      } catch (err) {
-        console.warn(`  ⚠ Saltato (${err instanceof Error ? err.message : err})`);
+    if (opzioni.all) {
+      let generati = 0;
+      for (const file of scenariDisponibili()) {
+        try {
+          await simulaFile(resolve("scenarios", file));
+          generati++;
+        } catch (err) {
+          console.warn(`  ⚠ Saltato (${err instanceof Error ? err.message : err})`);
+        }
       }
+      console.log(`\nReport generati in output/ (${generati} su ${scenariDisponibili().length})`);
+      return;
     }
-    console.log(`\nReport generati in output/ (${generati} su ${scenariDisponibili().length})`);
-    return;
-  }
 
-  if (arg) {
-    const overrideArgs = process.argv.slice(3);
-    await simulaFile(resolve(arg), overrideArgs);
-    return;
-  }
+    if (scenario) {
+      await simulaFile(resolve(scenario), opzioni);
+      return;
+    }
 
-  const files = scenariDisponibili();
-  files.forEach((f, i) => console.log(`  ${i + 1}. ${basename(f, ".json")}`));
+    const files = scenariDisponibili();
+    files.forEach((f, i) => console.log(`  ${i + 1}. ${basename(f, ".json")}`));
 
-  const rl = createInterface({ input: process.stdin, output: process.stdout });
-  const risposta = await rl.question("\nScenario (numero): ");
-  rl.close();
+    const rl = createInterface({ input: process.stdin, output: process.stdout });
+    const risposta = await rl.question("\nScenario (numero): ");
+    rl.close();
 
-  const idx = parseInt(risposta, 10) - 1;
-  const file = files[idx];
-  if (isNaN(idx) || !file) {
-    console.error("Scelta non valida.");
+    const idx = parseInt(risposta, 10) - 1;
+    const file = files[idx];
+    if (isNaN(idx) || !file) {
+      console.error("Scelta non valida.");
+      process.exit(1);
+    }
+
+    await simulaFile(resolve("scenarios", file));
+  })
+  .parseAsync(process.argv)
+  .catch((err) => {
+    console.error(err);
     process.exit(1);
-  }
-
-  await simulaFile(resolve("scenarios", file));
-}
-
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+  });
