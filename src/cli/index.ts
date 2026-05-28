@@ -82,6 +82,7 @@ export function formattaOutput(
   portafoglio: InputIterazione["portafoglio"],
   finecoAcquisti?: number[],
   dataIterazione?: Date,
+  dataEffettiva?: Date,
 ): string {
   const valoreAttuale = portafoglio.reduce((acc, s) => acc + s.quoteAttuali * s.prezzoCorrente, 0);
   const valoreFinale = portafoglio.reduce(
@@ -173,6 +174,27 @@ export function formattaOutput(
   const sep = (n: number) => "-".repeat(n);
   const col = (s: string, n: number) => s.padStart(n);
 
+  // Aggregati per riga Totale e Budget non speso (Tabella Quote)
+  const totaleQuoteAttuali = portafoglio.reduce((acc, s) => acc + s.quoteAttuali, 0);
+  const totaleQuoteAcquistate = output.acquisti.reduce((acc, a) => acc + a.quoteAcquistare, 0);
+  const totaleQuoteFinali = totaleQuoteAttuali + totaleQuoteAcquistate;
+  const totaleAcquistateCostoStr = `${totaleQuoteAcquistate} (${totaleSpeso.toFixed(2)}€)`;
+  const totaleAttualiStr = String(totaleQuoteAttuali);
+  const totaleFinaliStr = String(totaleQuoteFinali);
+  const budgetNonSpesoStr = `${output.budgetNonSpeso.toFixed(2)}€`;
+
+  const totaleQuoteAcquistateFineco = finecoAcquisti ? finecoAcquisti.reduce((acc, q) => acc + q, 0) : undefined;
+  const totaleAcquistateFinecoCostoStr =
+    totaleQuoteAcquistateFineco !== undefined && totaleSpestoFineco !== undefined
+      ? `${totaleQuoteAcquistateFineco} (${totaleSpestoFineco.toFixed(2)}€)`
+      : undefined;
+  const totaleQuoteFinaliFineco = finecoAcquisti
+    ? portafoglio.reduce((acc, s, i) => acc + s.quoteAttuali + finecoAcquisti[i]!, 0)
+    : undefined;
+  const totaleFinaliFineco = totaleQuoteFinaliFineco !== undefined ? String(totaleQuoteFinaliFineco) : undefined;
+  const budgetNonSpesoFinecoStr =
+    totaleSpestoFineco !== undefined ? `${(budget - totaleSpestoFineco).toFixed(2)}€` : undefined;
+
   // --- Tabella Quote ---
   const HDR_Q = {
     strumento: "Strumento",
@@ -183,15 +205,15 @@ export function formattaOutput(
     finaliFineco: "Quote Finali Fineco",
   };
   const wQ = {
-    strumento: Math.max(HDR_Q.strumento.length, ...datiRighe.map((r) => r.ticker.length)),
-    attuali: Math.max(HDR_Q.attuali.length, ...datiRighe.map((r) => r.attuali.length)),
-    acquistateCosto: Math.max(HDR_Q.acquistateCosto.length, ...datiRighe.map((r) => r.acquistateCosto.length)),
+    strumento: Math.max(HDR_Q.strumento.length, ...datiRighe.map((r) => r.ticker.length), "Totale".length, "Budget non speso".length),
+    attuali: Math.max(HDR_Q.attuali.length, ...datiRighe.map((r) => r.attuali.length), totaleAttualiStr.length),
+    acquistateCosto: Math.max(HDR_Q.acquistateCosto.length, ...datiRighe.map((r) => r.acquistateCosto.length), totaleAcquistateCostoStr.length, budgetNonSpesoStr.length),
     acquistateFinecoCosto: finecoAcquisti
-      ? Math.max(HDR_Q.acquistateFinecoCosto.length, ...datiRighe.map((r) => r.acquistateFinecoCosto?.length ?? 0))
+      ? Math.max(HDR_Q.acquistateFinecoCosto.length, ...datiRighe.map((r) => r.acquistateFinecoCosto?.length ?? 0), totaleAcquistateFinecoCostoStr?.length ?? 0, budgetNonSpesoFinecoStr?.length ?? 0)
       : 0,
-    finali: Math.max(HDR_Q.finali.length, ...datiRighe.map((r) => r.finali.length)),
+    finali: Math.max(HDR_Q.finali.length, ...datiRighe.map((r) => r.finali.length), totaleFinaliStr.length),
     finaliFineco: finecoAcquisti
-      ? Math.max(HDR_Q.finaliFineco.length, ...datiRighe.map((r) => r.finaliFineco?.length ?? 0))
+      ? Math.max(HDR_Q.finaliFineco.length, ...datiRighe.map((r) => r.finaliFineco?.length ?? 0), totaleFinaliFineco?.length ?? 0)
       : 0,
   };
 
@@ -216,12 +238,18 @@ export function formattaOutput(
       ` | ${col(r.finali, wQ.finali)}` +
       colFineco(r.finaliFineco, wQ.finaliFineco),
   );
-
-  const valoriTotaliQ = [`${totaleSpeso.toFixed(2)}€`, `${output.budgetNonSpeso.toFixed(2)}€`];
-  const maxLarghezzaQ = Math.max(...valoriTotaliQ.map((v) => v.length));
-  const larghezzaLabelQ = 24;
-  const rigaTotaleQ = (label: string, valore: string) =>
-    `${label.padEnd(larghezzaLabelQ)}${valore.padStart(maxLarghezzaQ)}`;
+  const rigaTotaleQuote =
+    `${"Totale".padEnd(wQ.strumento)} | ${col(totaleAttualiStr, wQ.attuali)} | ` +
+    `${col(totaleAcquistateCostoStr, wQ.acquistateCosto)}` +
+    colFineco(totaleAcquistateFinecoCostoStr, wQ.acquistateFinecoCosto) +
+    ` | ${col(totaleFinaliStr, wQ.finali)}` +
+    colFineco(totaleFinaliFineco, wQ.finaliFineco);
+  const rigaBudgetNonSpesoQuote =
+    `${"Budget non speso".padEnd(wQ.strumento)} | ${col("-", wQ.attuali)} | ` +
+    `${col(budgetNonSpesoStr, wQ.acquistateCosto)}` +
+    colFineco(budgetNonSpesoFinecoStr, wQ.acquistateFinecoCosto) +
+    ` | ${col("-", wQ.finali)}` +
+    colFineco(finecoAcquisti ? "-" : undefined, wQ.finaliFineco);
 
   // --- Tabella Pesi ---
   const HDR_P = {
@@ -255,18 +283,42 @@ export function formattaOutput(
   );
 
   // --- Tabella Deviazioni ---
+  const devAttualeTotal =
+    valoreAttuale === 0
+      ? null
+      : portafoglio.reduce((acc, s) => {
+          const valoreAtt = s.quoteAttuali * s.prezzoCorrente;
+          return acc + Math.abs(valoreAtt - s.pesoTarget * valoreAttuale);
+        }, 0);
+  const totalDevAttualeStr =
+    devAttualeTotal !== null
+      ? `${devAttualeTotal.toFixed(2)}€ (${((devAttualeTotal / valoreAttuale) * 100).toFixed(1)}%)`
+      : "n/a";
+  const totalDevFinaleStr = `${output.deviazione.toFixed(2)}€ (${((output.deviazione / valoreFinale) * 100).toFixed(1)}%)`;
+  const deviazioneFinecoTotale =
+    finecoAcquisti && valoreFinaleFineco !== undefined
+      ? portafoglio.reduce((acc, s, i) => {
+          const valFin = (s.quoteAttuali + finecoAcquisti[i]!) * s.prezzoCorrente;
+          return acc + Math.abs(valFin - s.pesoTarget * valoreFinaleFineco);
+        }, 0)
+      : undefined;
+  const totalDevFinaleFinecoCostoStr =
+    deviazioneFinecoTotale !== undefined && valoreFinaleFineco !== undefined
+      ? `${deviazioneFinecoTotale.toFixed(2)}€ (${((deviazioneFinecoTotale / valoreFinaleFineco) * 100).toFixed(1)}%)`
+      : undefined;
+
   const HDR_D = {
     strumento: "Strumento",
-    devAttuale: "Dev Attuale",
-    devFinale: "Dev Finale",
-    devFinaleFineco: "Dev Finale Fineco",
+    devAttuale: "Deviazione Attuale",
+    devFinale: "Deviazione Finale",
+    devFinaleFineco: "Deviazione Finale Fineco",
   };
   const wD = {
-    strumento: Math.max(HDR_D.strumento.length, ...datiRighe.map((r) => r.ticker.length)),
-    devAttuale: Math.max(HDR_D.devAttuale.length, ...datiRighe.map((r) => r.devAttuale.length)),
-    devFinale: Math.max(HDR_D.devFinale.length, ...datiRighe.map((r) => r.devFinale.length)),
+    strumento: Math.max(HDR_D.strumento.length, ...datiRighe.map((r) => r.ticker.length), "Totale".length),
+    devAttuale: Math.max(HDR_D.devAttuale.length, ...datiRighe.map((r) => r.devAttuale.length), totalDevAttualeStr.length),
+    devFinale: Math.max(HDR_D.devFinale.length, ...datiRighe.map((r) => r.devFinale.length), totalDevFinaleStr.length),
     devFinaleFineco: finecoAcquisti
-      ? Math.max(HDR_D.devFinaleFineco.length, ...datiRighe.map((r) => r.devFinaleFineco?.length ?? 0))
+      ? Math.max(HDR_D.devFinaleFineco.length, ...datiRighe.map((r) => r.devFinaleFineco?.length ?? 0), totalDevFinaleFinecoCostoStr?.length ?? 0)
       : 0,
   };
   const headerD =
@@ -282,31 +334,10 @@ export function formattaOutput(
       `${col(r.devFinale, wD.devFinale)}` +
       colFineco(r.devFinaleFineco, wD.devFinaleFineco),
   );
-
-  const devAttualeTotal =
-    valoreAttuale === 0
-      ? null
-      : portafoglio.reduce((acc, s) => {
-          const valoreAtt = s.quoteAttuali * s.prezzoCorrente;
-          return acc + Math.abs(valoreAtt - s.pesoTarget * valoreAttuale);
-        }, 0);
-  const valoriTotaliD = [
-    devAttualeTotal !== null ? `${devAttualeTotal.toFixed(2)}€` : "n/a",
-    `${output.deviazione.toFixed(2)}€`,
-  ];
-  const maxLarghezzaD = Math.max(...valoriTotaliD.filter((v) => v !== "n/a").map((v) => v.length));
-  const larghezzaLabelD = 32;
-  const rigaTotaleD = (label: string, valore: string) =>
-    `${label.padEnd(larghezzaLabelD)}${valore.padStart(maxLarghezzaD)}`;
-
-  // --- Riepilogo comparativo (solo con Fineco) ---
-  const deviazioneFinecoTotale =
-    finecoAcquisti && valoreFinaleFineco !== undefined
-      ? portafoglio.reduce((acc, s, i) => {
-          const valFin = (s.quoteAttuali + finecoAcquisti[i]!) * s.prezzoCorrente;
-          return acc + Math.abs(valFin - s.pesoTarget * valoreFinaleFineco);
-        }, 0)
-      : undefined;
+  const rigaTotaleDeviazioni =
+    `${"Totale".padEnd(wD.strumento)} | ${col(totalDevAttualeStr, wD.devAttuale)} | ` +
+    `${col(totalDevFinaleStr, wD.devFinale)}` +
+    colFineco(totalDevFinaleFinecoCostoStr, wD.devFinaleFineco);
 
   const righeRiepilogo: string[] = [];
   if (finecoAcquisti && totaleSpestoFineco !== undefined && deviazioneFinecoTotale !== undefined) {
@@ -326,8 +357,15 @@ export function formattaOutput(
     );
   }
 
-  const intestazioneData = dataIterazione
-    ? [`Iterazione del ${dataIterazione.toISOString().slice(0, 10)}`, ""]
+  const dataDisplay = dataEffettiva ?? dataIterazione;
+  const dataDisplayStr = dataDisplay?.toISOString().slice(0, 10);
+  const dataRichiestaStr = dataIterazione?.toISOString().slice(0, 10);
+  const notaMercato =
+    dataDisplayStr && dataRichiestaStr && dataDisplayStr !== dataRichiestaStr
+      ? ` (richiesta: ${dataRichiestaStr} — mercato chiuso)`
+      : "";
+  const intestazioneData = dataDisplay
+    ? [`Iterazione del ${dataDisplayStr}${notaMercato} - Budget: ${budget}€`, ""]
     : [];
 
   return [
@@ -335,9 +373,9 @@ export function formattaOutput(
     headerQ,
     separatoreQ,
     ...righeQ,
-    "",
-    rigaTotaleQ("Totale speso:", valoriTotaliQ[0]!),
-    rigaTotaleQ("Budget Non Speso (U):", valoriTotaliQ[1]!),
+    separatoreQ,
+    rigaTotaleQuote,
+    rigaBudgetNonSpesoQuote,
     "",
     headerP,
     separatoreP,
@@ -346,15 +384,15 @@ export function formattaOutput(
     headerD,
     separatoreD,
     ...righeD,
-    "",
-    rigaTotaleD("Deviazione attuale totale (D_€):", valoriTotaliD[0]!),
-    rigaTotaleD("Deviazione finale totale (D_€):", valoriTotaliD[1]!),
+    separatoreD,
+    rigaTotaleDeviazioni,
     ...(righeRiepilogo.length > 0 ? ["", ...righeRiepilogo] : []),
   ].join("\n");
 }
 
 export async function eseguiScenario(scenario: Scenario): Promise<string> {
   let portafoglio: InputIterazione["portafoglio"];
+  let dataEffettiva: Date | undefined;
 
   if (scenario.dataIterazione !== undefined) {
     const data = scenario.dataIterazione;
@@ -367,6 +405,8 @@ export async function eseguiScenario(scenario: Scenario): Promise<string> {
       quoteAttuali: s.quoteAttuali,
       pesoTarget: s.pesoTarget,
     }));
+    // Tutti gli ETF europei condividono lo stesso calendario di borsa — usiamo la data del primo strumento
+    dataEffettiva = quotazioni[0]?.[0]?.data;
   } else {
     portafoglio = await Promise.all(
       scenario.strumenti.map(async (s) => ({
@@ -383,7 +423,7 @@ export async function eseguiScenario(scenario: Scenario): Promise<string> {
     : undefined;
 
   const output = decideIterazione({ portafoglio, budget: scenario.budget, alfa: scenario.alfa });
-  return formattaOutput(output, portafoglio, finecoAcquisti, scenario.dataIterazione);
+  return formattaOutput(output, portafoglio, finecoAcquisti, scenario.dataIterazione, dataEffettiva);
 }
 
 async function main(args: string[]): Promise<void> {
