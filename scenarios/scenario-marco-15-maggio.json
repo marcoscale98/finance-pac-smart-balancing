@@ -1,0 +1,11 @@
+{
+  "strumenti": [
+    { "ticker": "EXUS.DE", "pesoTarget": 0.405, "quoteAttuali": 35, "quoteAcquistateFineco": 5 },
+    { "ticker": "IUSE.MI", "pesoTarget": 0.315, "quoteAttuali": 7, "quoteAcquistateFineco": 0 },
+    { "ticker": "XMME.DE", "pesoTarget": 0.180, "quoteAttuali": 8, "quoteAcquistateFineco": 0 },
+    { "ticker": "GBSE.MI", "pesoTarget": 0.100, "quoteAttuali": 12, "quoteAcquistateFineco": 3 }
+  ],
+  "budget": 500,
+  "alfa": 0.5,
+  "dataIterazione": "2026-05-16"
+}

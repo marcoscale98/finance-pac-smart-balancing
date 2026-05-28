@@ -3,6 +3,7 @@
 - Code Language: Italian — usa italiano per tutti gli identifier, commenti e messaggi. Rispetta il glossario in `CONTEXT.md`.
 - Use Context7 MCP server for Libraries docs
 - Use Deepwiki for querying Github codebases of famous open source projects
+- When you finish writing code and before ending your shift, always commit your changes
 
 ## Setup
 
