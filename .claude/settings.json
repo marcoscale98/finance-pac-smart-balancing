@@ -63,7 +63,28 @@
             "WebFetch(domain:api.github.com)",
             "WebFetch(domain:registry.npmjs.org)",
             "Bash(npm install --no-save *)",
-            "Bash(npm run iterazione *)"
+            "Bash(npm run iterazione *)",
+            "Skill(tdd)",
+            "Bash(npx vitest run *)",
+            "Bash(mktemp -t *)",
+            "Bash(npx skills experimental_install 2>&1)",
+            "Bash(git -C * diff *)",
+            "Bash(git -C * status *)",
+            "Bash(git -C * add *)",
+            "Bash(git -C * commit -m *)",
+            "Bash(git -C * push)",
+            "Bash(git merge --ff-only *)",
+            "mcp__claude_ai_Context7__resolve-library-id",
+            "WebFetch(domain:code.claude.com)",
+            "Bash(gh issue list *)",
+            "Bash(gh issue view *)",
+            "mcp__claude_ai_Context7__query-docs",
+            "Bash(npm run listino *)",
+            "Bash(npm run simulate:all)",
+            "Bash(git commit -m *)",
+            "Bash(git add *)",
+            "Bash(npm run typecheck *)",
+            "Bash(gh repo view *)"
         ]
     }
 }
