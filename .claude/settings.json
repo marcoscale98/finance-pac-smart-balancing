@@ -80,7 +80,7 @@
             "Bash(gh issue view *)",
             "mcp__claude_ai_Context7__query-docs",
             "Bash(npm run listino *)",
-            "Bash(npm run simulate:all)",
+            "Bash(npm run simulazione:all)",
             "Bash(git commit -m *)",
             "Bash(git add *)",
             "Bash(npm run typecheck *)",

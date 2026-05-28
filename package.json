@@ -7,8 +7,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "iterazione": "tsx src/cli/index.ts",
-    "simulate:all": "tsx src/simula.ts --all",
-    "simulate": "tsx src/simula.ts",
+    "simulazione:all": "tsx src/simula.ts --all",
+    "simulazione": "tsx src/simula.ts",
     "listino": "tsx src/data-inizio-listino.ts"
   },
   "devDependencies": {
