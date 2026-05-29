@@ -1,14 +1,14 @@
 {
   "strumenti": [
-    { "ticker": "EXUS.DE", "pesoTarget": 0.405, "quoteAttuali": 27 },
-    { "ticker": "IUSE.MI", "pesoTarget": 0.315, "quoteAttuali": 5 },
-    { "ticker": "XMME.DE", "pesoTarget": 0.180, "quoteAttuali": 6 },
-    { "ticker": "GBSE.MI", "pesoTarget": 0.100, "quoteAttuali": 9 }
+    { "ticker": "EXUS.DE", "pesoTarget": 0.405, "quoteAttuali": 24 },
+    { "ticker": "IUSE.MI", "pesoTarget": 0.315, "quoteAttuali": 4 },
+    { "ticker": "XMME.DE", "pesoTarget": 0.180, "quoteAttuali": 5 },
+    { "ticker": "GBSE.MI", "pesoTarget": 0.100, "quoteAttuali": 8 }
   ],
   "budget": 500,
   "alfa": 0.5,
   "grigliaDiAlfa": [0.25, 0.5, 0.75],
-  "durataInMesi": 3,
-  "dataInizio": "2026-03-15",
+  "durataInMesi": 4,
+  "dataInizio": "2026-02-15",
   "percorsoTransazioniFineco": "data/storico-fineco-reale.csv"
 }
