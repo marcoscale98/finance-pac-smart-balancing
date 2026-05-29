@@ -28,6 +28,7 @@ export interface SerieAlfa {
 export interface SimulationResult {
   serieAlfa: SerieAlfa[];
   serieFineco?: MetricaMensile[];
+  puntoInizio: MetricaMensile;
 }
 
 type FnPrezziPerDate = (ticker: string, date: Date[]) => Promise<Quotazione[]>;
@@ -177,16 +178,57 @@ async function simulaFineco(
   return mesi;
 }
 
+async function calcolaPuntoInizio(
+  scenario: ScenarioSimulazione,
+  prezziPerDate: FnPrezziPerDate,
+): Promise<MetricaMensile> {
+  const dataNominale = new Date(scenario.dataInizio);
+  dataNominale.setMonth(dataNominale.getMonth() - 1);
+
+  const quotazioni: Record<string, Quotazione> = {};
+  for (const s of scenario.portafoglioIniziale) {
+    const risultati = await prezziPerDate(s.ticker, [dataNominale]);
+    if (risultati.length === 0) {
+      throw new Error(`Prezzo mancante per ${s.ticker} al ${dataNominale.toISOString()}`);
+    }
+    quotazioni[s.ticker] = risultati[0]!;
+  }
+
+  const dataEffettiva = quotazioni[scenario.portafoglioIniziale[0]!.ticker]!.data;
+  const portafoglio = scenario.portafoglioIniziale.map((s) => ({
+    ...s,
+    prezzoCorrente: quotazioni[s.ticker]!.prezzo,
+  }));
+  const valorePortafoglio = portafoglio.reduce(
+    (acc, s) => acc + s.quoteAttuali * s.prezzoCorrente,
+    0,
+  );
+  const deviazione = calcolaDeviazione(portafoglio, valorePortafoglio);
+
+  return {
+    data: dataEffettiva,
+    valorePortafoglio,
+    spesaCumulativa: 0,
+    budgetTeoricoConsumato: 0,
+    budgetNonSpeso: 0,
+    deviazioneMedia: portafoglio.length > 0 ? deviazione / portafoglio.length : 0,
+    deviazioneMediaPercentuale: valorePortafoglio > 0
+      ? (deviazione / valorePortafoglio) / portafoglio.length
+      : 0,
+  };
+}
+
 export async function simula(
   scenario: ScenarioSimulazione,
   prezziPerDate: FnPrezziPerDate,
   acquisizioniFineco?: Map<string, Record<string, number>>,
 ): Promise<SimulationResult> {
   const date = dateIterazioni(scenario.dataInizio, scenario.durataInMesi);
-  const serieAlfa = await Promise.all(
-    scenario.grigliaDiAlfa.map((alfa) => simulaSerie(alfa, scenario, date, prezziPerDate)),
-  );
-  if (!acquisizioniFineco) return { serieAlfa };
+  const [serieAlfa, puntoInizio] = await Promise.all([
+    Promise.all(scenario.grigliaDiAlfa.map((alfa) => simulaSerie(alfa, scenario, date, prezziPerDate))),
+    calcolaPuntoInizio(scenario, prezziPerDate),
+  ]);
+  if (!acquisizioniFineco) return { serieAlfa, puntoInizio };
   const serieFineco = await simulaFineco(scenario, date, prezziPerDate, acquisizioniFineco);
-  return { serieAlfa, serieFineco };
+  return { serieAlfa, serieFineco, puntoInizio };
 }
