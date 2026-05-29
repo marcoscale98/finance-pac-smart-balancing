@@ -13,12 +13,14 @@ export async function generateReport(
 
 export { buildHtml };
 
+function formatData(d: Date): string {
+  return d.toLocaleDateString("it-IT", { year: "numeric", month: "short" });
+}
+
 function etichette(result: SimulationResult): string[] {
   const prima = result.serieAlfa[0];
-  if (!prima || prima.mesi.length === 0) return [];
-  return prima.mesi.map((m) =>
-    m.data.toLocaleDateString("it-IT", { year: "numeric", month: "short" }),
-  );
+  const mesiLabels = prima ? prima.mesi.map((m) => formatData(m.data)) : [];
+  return [formatData(result.puntoInizio.data), ...mesiLabels];
 }
 
 function dataset(
@@ -67,24 +69,35 @@ function grafico(id: string, titolo: string, datasetsJs: string, labelY: string,
     </script>`;
 }
 
+function round2(v: number): number {
+  return Math.round(v * 100) / 100;
+}
+
 function buildHtml(result: SimulationResult): string {
   const labels = etichette(result);
-  const { serieAlfa, serieFineco } = result;
+  const { serieAlfa, serieFineco, puntoInizio } = result;
+
+  const r4 = (v: number) => Math.round(v * 10000) / 100;
+
+  const conInizio = (valori: number[], primoValore: number) => [
+    round2(primoValore),
+    ...valori.map(round2),
+  ];
 
   const dsFineco = serieFineco
-    ? dataset("Fineco", serieFineco.map((m) => Math.round(m.valorePortafoglio * 100) / 100), "#000000")
+    ? dataset("Fineco", conInizio(serieFineco.map((m) => m.valorePortafoglio), puntoInizio.valorePortafoglio), "#000000")
     : null;
   const dsFinecoSpesa = serieFineco
-    ? dataset("Fineco", serieFineco.map((m) => Math.round(m.spesaCumulativa * 100) / 100), "#000000")
+    ? dataset("Fineco", conInizio(serieFineco.map((m) => m.spesaCumulativa), puntoInizio.spesaCumulativa), "#000000")
     : null;
   const dsFinecoBudgetNonSpeso = serieFineco
-    ? dataset("Fineco", serieFineco.map((m) => Math.round(m.budgetNonSpeso * 100) / 100), "#000000")
+    ? dataset("Fineco", conInizio(serieFineco.map((m) => m.budgetNonSpeso), puntoInizio.budgetNonSpeso), "#000000")
     : null;
   const dsFinecoDeviazione = serieFineco
-    ? dataset("Fineco", serieFineco.map((m) => Math.round(m.deviazioneMedia * 100) / 100), "#000000")
+    ? dataset("Fineco", conInizio(serieFineco.map((m) => m.deviazioneMedia), puntoInizio.deviazioneMedia), "#000000")
     : null;
   const dsFinecoDeviazionePerc = serieFineco
-    ? dataset("Fineco", serieFineco.map((m) => Math.round(m.deviazioneMediaPercentuale * 10000) / 100), "#000000")
+    ? dataset("Fineco", [round2(r4(puntoInizio.deviazioneMediaPercentuale)), ...serieFineco.map((m) => round2(r4(m.deviazioneMediaPercentuale)))], "#000000")
     : null;
 
   // Grafico 1: Valore portafoglio
@@ -92,7 +105,7 @@ function buildHtml(result: SimulationResult): string {
     ...serieAlfa.map((serie, i) =>
       dataset(
         `α = ${serie.alfa}`,
-        serie.mesi.map((m) => Math.round(m.valorePortafoglio * 100) / 100),
+        conInizio(serie.mesi.map((m) => m.valorePortafoglio), puntoInizio.valorePortafoglio),
         COLORI[i % COLORI.length]!,
       ),
     ),
@@ -100,8 +113,10 @@ function buildHtml(result: SimulationResult): string {
   ].join(",\n");
 
   // Grafico 2: Budget cumulativo teorico vs effettivo
-  const budgetTeorico =
-    serieAlfa[0]?.mesi.map((m) => Math.round(m.budgetTeoricoConsumato * 100) / 100) ?? [];
+  const budgetTeorico = conInizio(
+    serieAlfa[0]?.mesi.map((m) => m.budgetTeoricoConsumato) ?? [],
+    puntoInizio.budgetTeoricoConsumato,
+  );
   const dsTeoricoBase = dataset("Budget teorico", budgetTeorico, "#6b7280", {
     borderDash: [6, 3],
   });
@@ -109,7 +124,7 @@ function buildHtml(result: SimulationResult): string {
     .map((serie, i) =>
       dataset(
         `Effettivo α = ${serie.alfa}`,
-        serie.mesi.map((m) => Math.round(m.spesaCumulativa * 100) / 100),
+        conInizio(serie.mesi.map((m) => m.spesaCumulativa), puntoInizio.spesaCumulativa),
         COLORI[i % COLORI.length]!,
       ),
     )
@@ -121,7 +136,7 @@ function buildHtml(result: SimulationResult): string {
     ...serieAlfa.map((serie, i) =>
       dataset(
         `α = ${serie.alfa}`,
-        serie.mesi.map((m) => Math.round(m.budgetNonSpeso * 100) / 100),
+        conInizio(serie.mesi.map((m) => m.budgetNonSpeso), puntoInizio.budgetNonSpeso),
         COLORI[i % COLORI.length]!,
       ),
     ),
@@ -133,7 +148,7 @@ function buildHtml(result: SimulationResult): string {
     ...serieAlfa.map((serie, i) =>
       dataset(
         `α = ${serie.alfa}`,
-        serie.mesi.map((m) => Math.round(m.deviazioneMedia * 100) / 100),
+        conInizio(serie.mesi.map((m) => m.deviazioneMedia), puntoInizio.deviazioneMedia),
         COLORI[i % COLORI.length]!,
       ),
     ),
@@ -145,7 +160,7 @@ function buildHtml(result: SimulationResult): string {
     ...serieAlfa.map((serie, i) =>
       dataset(
         `α = ${serie.alfa}`,
-        serie.mesi.map((m) => Math.round(m.deviazioneMediaPercentuale * 10000) / 100),
+        [round2(r4(puntoInizio.deviazioneMediaPercentuale)), ...serie.mesi.map((m) => round2(r4(m.deviazioneMediaPercentuale)))],
         COLORI[i % COLORI.length]!,
       ),
     ),

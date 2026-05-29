@@ -7,6 +7,16 @@ import type { SimulationResult, MetricaMensile } from "../simulatore/index.js";
 // Alternativa: esportiamo buildHtml da report/index.ts per testabilità.
 import { buildHtml } from "./index.js";
 
+const puntoInizio: MetricaMensile = {
+  data: new Date("2023-12-15"),
+  valorePortafoglio: 500,
+  spesaCumulativa: 0,
+  budgetTeoricoConsumato: 0,
+  budgetNonSpeso: 0,
+  deviazioneMedia: 10,
+  deviazioneMediaPercentuale: 0.02,
+};
+
 const metriche1mese: MetricaMensile[] = [
   {
     data: new Date("2024-01-15"),
@@ -22,11 +32,29 @@ const metriche1mese: MetricaMensile[] = [
 const resultConFineco: SimulationResult = {
   serieAlfa: [{ alfa: 0.5, mesi: metriche1mese }],
   serieFineco: metriche1mese,
+  puntoInizio,
 };
 
 const resultSenzaFineco: SimulationResult = {
   serieAlfa: [{ alfa: 0.5, mesi: metriche1mese }],
+  puntoInizio,
 };
+
+describe("buildHtml — puntoInizio", () => {
+  it("la prima etichetta sull'asse X corrisponde alla data di puntoInizio", () => {
+    const html = buildHtml(resultSenzaFineco);
+    const etichette = JSON.parse(html.match(/const ETICHETTE = (\[.*?\]);/)![1]!);
+    expect(etichette[0]).toBe(
+      puntoInizio.data.toLocaleDateString("it-IT", { year: "numeric", month: "short" }),
+    );
+  });
+
+  it("il primo valore nel dataset 'Valore portafoglio' è puntoInizio.valorePortafoglio", () => {
+    const html = buildHtml(resultSenzaFineco);
+    // Il dataset del grafico g1 (α=0.5) deve avere 500 come primo punto
+    expect(html).toContain('"data":[500,');
+  });
+});
 
 describe("buildHtml — dataset Fineco", () => {
   it("con serieFineco: tutti e 5 i grafici contengono dataset con label Fineco e colore #000000", () => {

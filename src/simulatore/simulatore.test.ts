@@ -241,4 +241,104 @@ describe("simula", () => {
       "Prezzo mancante per A",
     );
   });
+
+  describe("puntoInizio", () => {
+    it("data: è la data effettiva di mercato al mese precedente a dataInizio", async () => {
+      const dataInizio = new Date("2024-02-15");
+      const dataEffettivaInizio = new Date("2024-01-14"); // giorno di mercato più vicino al 2024-01-15
+
+      const prezziPerDateMock = vi.fn().mockImplementation(
+        async (_ticker: string, date: Date[]): Promise<Quotazione[]> =>
+          date.map((d) => ({
+            data: d.toISOString().slice(0, 7) === "2024-01" ? dataEffettivaInizio : d,
+            prezzo: 100,
+          })),
+      );
+
+      const scenario: ScenarioSimulazione = {
+        portafoglioIniziale: [
+          { ticker: "A", prezzoCorrente: 100, quoteAttuali: 1, pesoTarget: 1 },
+        ],
+        budget: 100,
+        durataInMesi: 1,
+        grigliaDiAlfa: [0.5],
+        dataInizio,
+      };
+
+      const risultato = await simula(scenario, prezziPerDateMock);
+      expect(risultato.puntoInizio.data).toEqual(dataEffettivaInizio);
+    });
+
+    it("valorePortafoglio: somma quote iniziali × prezzo al mese precedente", async () => {
+      // A: 2 quote × 50€ = 100€, B: 3 quote × 20€ = 60€ → totale 160€
+      const prezziPerDateMock = vi.fn().mockImplementation(
+        async (ticker: string, date: Date[]): Promise<Quotazione[]> => {
+          const prezzi: Record<string, number> = { A: 50, B: 20 };
+          return date.map((d) => ({ data: d, prezzo: prezzi[ticker]! }));
+        },
+      );
+
+      const scenario: ScenarioSimulazione = {
+        portafoglioIniziale: [
+          { ticker: "A", prezzoCorrente: 50, quoteAttuali: 2, pesoTarget: 0.6 },
+          { ticker: "B", prezzoCorrente: 20, quoteAttuali: 3, pesoTarget: 0.4 },
+        ],
+        budget: 100,
+        durataInMesi: 1,
+        grigliaDiAlfa: [0.5],
+        dataInizio: new Date("2024-02-15"),
+      };
+
+      const risultato = await simula(scenario, prezziPerDateMock);
+      expect(risultato.puntoInizio.valorePortafoglio).toBeCloseTo(160);
+    });
+
+    it("spesaCumulativa, budgetTeoricoConsumato, budgetNonSpeso sono tutti 0", async () => {
+      const prezziPerDateMock = vi.fn().mockImplementation(
+        async (_ticker: string, date: Date[]): Promise<Quotazione[]> =>
+          date.map((d) => ({ data: d, prezzo: 100 })),
+      );
+
+      const scenario: ScenarioSimulazione = {
+        portafoglioIniziale: [
+          { ticker: "A", prezzoCorrente: 100, quoteAttuali: 1, pesoTarget: 1 },
+        ],
+        budget: 100,
+        durataInMesi: 1,
+        grigliaDiAlfa: [0.5],
+        dataInizio: new Date("2024-02-15"),
+      };
+
+      const risultato = await simula(scenario, prezziPerDateMock);
+      expect(risultato.puntoInizio.spesaCumulativa).toBe(0);
+      expect(risultato.puntoInizio.budgetTeoricoConsumato).toBe(0);
+      expect(risultato.puntoInizio.budgetNonSpeso).toBe(0);
+    });
+
+    it("deviazioneMedia: riflette lo sbilanciamento iniziale prima di qualsiasi acquisto", async () => {
+      // A: 1 quota × 100€ = 100€ (peso 100%), target 60% → portafoglio vale solo A
+      // ma con B a 0 quote: valorePortafoglio = 100€
+      // deviazioneA = |100 - 0.6×100| = 40, deviazioneB = |0 - 0.4×100| = 40
+      // deviazioneMedia = (40+40)/2 = 40
+      const prezziPerDateMock = vi.fn().mockImplementation(
+        async (_ticker: string, date: Date[]): Promise<Quotazione[]> =>
+          date.map((d) => ({ data: d, prezzo: 100 })),
+      );
+
+      const scenario: ScenarioSimulazione = {
+        portafoglioIniziale: [
+          { ticker: "A", prezzoCorrente: 100, quoteAttuali: 1, pesoTarget: 0.6 },
+          { ticker: "B", prezzoCorrente: 100, quoteAttuali: 0, pesoTarget: 0.4 },
+        ],
+        budget: 100,
+        durataInMesi: 1,
+        grigliaDiAlfa: [0.5],
+        dataInizio: new Date("2024-02-15"),
+      };
+
+      const risultato = await simula(scenario, prezziPerDateMock);
+      expect(risultato.puntoInizio.deviazioneMedia).toBeCloseTo(40);
+      expect(risultato.puntoInizio.deviazioneMediaPercentuale).toBeCloseTo(0.4); // 40/100
+    });
+  });
 });
