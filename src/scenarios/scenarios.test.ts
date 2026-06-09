@@ -193,8 +193,8 @@ describe("parseScenarioCompleto — budgetPerIterazione", () => {
 
 describe("file scenario JSON", () => {
   const scenarioFiles = [
-    "scenario1-marco",
-    "scenario2-marco-gold-costoso",
+    "scenario1",
+    "scenario2-gold-costoso",
     "scenario3-all-equity",
     "scenario4-strumenti-costosi",
   ];
