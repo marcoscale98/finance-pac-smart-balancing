@@ -160,6 +160,37 @@ describe("parseScenarioCompleto — percorsoTransazioniFineco", () => {
   });
 });
 
+describe("parseScenarioCompleto — budgetPerIterazione", () => {
+  const base = {
+    strumenti: [{ ticker: "EXUS.DE", pesoTarget: 1.0, quoteAttuali: 0 }],
+    budget: 400,
+    alfa: 0.5,
+    grigliaDiAlfa: [0.5],
+    durataInMesi: 3,
+    dataInizio: "2023-01-01",
+  };
+
+  it("campo presente con lunghezza corretta → parsato come array", () => {
+    const json = JSON.stringify({ ...base, budgetPerIterazione: [600, 700, 500] });
+
+    const scenario = parseScenarioCompleto(json);
+
+    expect(scenario.budgetPerIterazione).toEqual([600, 700, 500]);
+  });
+
+  it("lunghezza != durataInMesi → throw con messaggio leggibile", () => {
+    const json = JSON.stringify({ ...base, budgetPerIterazione: [600, 700] });
+
+    expect(() => parseScenarioCompleto(json)).toThrow("budgetPerIterazione");
+  });
+
+  it("campo assente → budgetPerIterazione undefined", () => {
+    const scenario = parseScenarioCompleto(JSON.stringify(base));
+
+    expect(scenario.budgetPerIterazione).toBeUndefined();
+  });
+});
+
 describe("file scenario JSON", () => {
   const scenarioFiles = [
     "scenario1-marco",

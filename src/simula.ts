@@ -46,6 +46,9 @@ async function simulaFile(percorso: string, override: OpzioniOverride = {}): Pro
       prezzoCorrente: 0,
     })),
     budget: scenarioRaw.budget,
+    ...(scenarioRaw.budgetPerIterazione !== undefined && {
+      budgetPerIterazione: scenarioRaw.budgetPerIterazione,
+    }),
     durataInMesi: scenarioRaw.durataInMesi,
     grigliaDiAlfa: scenarioRaw.grigliaDiAlfa,
     dataInizio: scenarioRaw.dataInizio,

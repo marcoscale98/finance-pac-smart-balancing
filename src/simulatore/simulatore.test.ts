@@ -204,6 +204,62 @@ describe("simula", () => {
     expect(risultato.serieAlfa[0]!.mesi).toHaveLength(2);
   });
 
+  describe("budgetPerIterazione", () => {
+    it("ogni mese usa il budget dell'array invece di budget fisso", async () => {
+      // Strumento a 100€. budgetPerIterazione: [100, 200]
+      // Mese 1: budget=100 → 1 quota. Mese 2: budget=200 → 2 quote.
+      // spesaCumulativa mese 2 = 100 + 200 = 300€
+      const prezziPerDateMock = vi.fn().mockImplementation(
+        async (_ticker: string, date: Date[]): Promise<Quotazione[]> =>
+          date.map((d) => ({ data: d, prezzo: 100 })),
+      );
+
+      const scenario: ScenarioSimulazione = {
+        portafoglioIniziale: [
+          { ticker: "A", prezzoCorrente: 100, quoteAttuali: 0, pesoTarget: 1 },
+        ],
+        budget: 50,
+        budgetPerIterazione: [100, 200],
+        durataInMesi: 2,
+        grigliaDiAlfa: [0],
+        dataInizio: new Date("2024-01-15"),
+      };
+
+      const risultato = await simula(scenario, prezziPerDateMock);
+      const mesi = risultato.serieAlfa[0]!.mesi;
+
+      expect(mesi[0]!.spesaCumulativa).toBeCloseTo(100);
+      expect(mesi[1]!.spesaCumulativa).toBeCloseTo(300);
+    });
+
+    it("budgetTeoricoConsumato è la somma cumulativa dei budget pianificati", async () => {
+      // budgetPerIterazione: [600, 700, 500]
+      // mese 1 → 600, mese 2 → 1300, mese 3 → 1800
+      const prezziPerDateMock = vi.fn().mockImplementation(
+        async (_ticker: string, date: Date[]): Promise<Quotazione[]> =>
+          date.map((d) => ({ data: d, prezzo: 10 })),
+      );
+
+      const scenario: ScenarioSimulazione = {
+        portafoglioIniziale: [
+          { ticker: "A", prezzoCorrente: 10, quoteAttuali: 0, pesoTarget: 1 },
+        ],
+        budget: 400,
+        budgetPerIterazione: [600, 700, 500],
+        durataInMesi: 3,
+        grigliaDiAlfa: [0],
+        dataInizio: new Date("2024-01-15"),
+      };
+
+      const risultato = await simula(scenario, prezziPerDateMock);
+      const mesi = risultato.serieAlfa[0]!.mesi;
+
+      expect(mesi[0]!.budgetTeoricoConsumato).toBeCloseTo(600);
+      expect(mesi[1]!.budgetTeoricoConsumato).toBeCloseTo(1300);
+      expect(mesi[2]!.budgetTeoricoConsumato).toBeCloseTo(1800);
+    });
+  });
+
   it("senza acquisizioniFineco: serieFineco è undefined", async () => {
     const prezziPerDateMock = vi.fn().mockImplementation(
       async (_ticker: string, date: Date[]): Promise<Quotazione[]> =>

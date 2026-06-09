@@ -5,6 +5,7 @@ export interface ScenarioCompleto extends Scenario {
   durataInMesi: number;
   dataInizio: Date;
   percorsoTransazioniFineco?: string;
+  budgetPerIterazione?: number[];
 }
 
 export function parseScenarioCompleto(json: string): ScenarioCompleto {
@@ -34,11 +35,23 @@ export function parseScenarioCompleto(json: string): ScenarioCompleto {
       ? dati["percorsoTransazioniFineco"]
       : undefined;
 
+  let budgetPerIterazione: number[] | undefined;
+  if (Array.isArray(dati["budgetPerIterazione"])) {
+    const arr = dati["budgetPerIterazione"] as number[];
+    if (arr.length !== (dati["durataInMesi"] as number)) {
+      throw new Error(
+        `Scenario non valido: budgetPerIterazione deve avere esattamente durataInMesi elementi (attesi ${dati["durataInMesi"] as number}, trovati ${arr.length})`,
+      );
+    }
+    budgetPerIterazione = arr;
+  }
+
   return {
     ...base,
     grigliaDiAlfa: dati["grigliaDiAlfa"] as number[],
     durataInMesi: dati["durataInMesi"],
     dataInizio: new Date(dati["dataInizio"]),
     ...(percorsoTransazioniFineco !== undefined && { percorsoTransazioniFineco }),
+    ...(budgetPerIterazione !== undefined && { budgetPerIterazione }),
   };
 }

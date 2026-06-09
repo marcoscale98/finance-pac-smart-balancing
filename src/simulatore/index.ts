@@ -5,6 +5,7 @@ import type { Quotazione } from "../prezzi/index.js";
 export interface ScenarioSimulazione {
   portafoglioIniziale: Strumento[];
   budget: number;
+  budgetPerIterazione?: number[];
   durataInMesi: number;
   grigliaDiAlfa: number[];
   dataInizio: Date;
@@ -62,9 +63,11 @@ async function simulaSerie(
   let portafoglio: Strumento[] = scenario.portafoglioIniziale.map((s) => ({ ...s }));
   const mesi: MetricaMensile[] = [];
   let spesaCumulativa = 0;
+  let budgetTeoricoConsumato = 0;
 
   for (let i = 0; i < date.length; i++) {
     const dataNominale = date[i]!;
+    const budgetMese = scenario.budgetPerIterazione?.[i] ?? scenario.budget;
 
     const quotazioni: Record<string, Quotazione> = {};
     for (const s of portafoglio) {
@@ -82,14 +85,15 @@ async function simulaSerie(
 
     const dataEffettiva = quotazioni[portafoglio[0]!.ticker]!.data;
 
-    const output = decideIterazione({ portafoglio, budget: scenario.budget, alfa });
+    const output = decideIterazione({ portafoglio, budget: budgetMese, alfa });
 
     portafoglio = portafoglio.map((s) => {
       const acquisto = output.acquisti.find((a) => a.ticker === s.ticker)!;
       return { ...s, quoteAttuali: s.quoteAttuali + acquisto.quoteAcquistare };
     });
 
-    spesaCumulativa += scenario.budget - output.budgetNonSpeso;
+    spesaCumulativa += budgetMese - output.budgetNonSpeso;
+    budgetTeoricoConsumato += budgetMese;
 
     const valorePortafoglio = portafoglio.reduce(
       (acc, s) => acc + s.quoteAttuali * s.prezzoCorrente,
@@ -100,7 +104,7 @@ async function simulaSerie(
       data: dataEffettiva,
       valorePortafoglio,
       spesaCumulativa,
-      budgetTeoricoConsumato: (i + 1) * scenario.budget,
+      budgetTeoricoConsumato,
       budgetNonSpeso: output.budgetNonSpeso,
       deviazioneMedia: output.deviazione / portafoglio.length,
       deviazioneMediaPercentuale: valorePortafoglio > 0
@@ -121,9 +125,11 @@ async function simulaFineco(
   let portafoglio: Strumento[] = scenario.portafoglioIniziale.map((s) => ({ ...s }));
   const mesi: MetricaMensile[] = [];
   let spesaCumulativa = 0;
+  let budgetTeoricoConsumato = 0;
 
   for (let i = 0; i < date.length; i++) {
     const dataNominale = date[i]!;
+    const budgetMese = scenario.budgetPerIterazione?.[i] ?? scenario.budget;
     const chiave = annoMese(dataNominale);
     const acquistiMese = acquisizioniFineco.get(chiave);
 
@@ -153,6 +159,7 @@ async function simulaFineco(
     }));
 
     spesaCumulativa += spesaMese;
+    budgetTeoricoConsumato += budgetMese;
 
     const valorePortafoglio = portafoglio.reduce(
       (acc, s) => acc + s.quoteAttuali * s.prezzoCorrente,
@@ -166,8 +173,8 @@ async function simulaFineco(
       data: dataEffettiva,
       valorePortafoglio,
       spesaCumulativa,
-      budgetTeoricoConsumato: (i + 1) * scenario.budget,
-      budgetNonSpeso: Math.max(0, scenario.budget - spesaMese),
+      budgetTeoricoConsumato,
+      budgetNonSpeso: Math.max(0, budgetMese - spesaMese),
       deviazioneMedia: deviazione / portafoglio.length,
       deviazioneMediaPercentuale: valorePortafoglio > 0
         ? (deviazione / valorePortafoglio) / portafoglio.length
