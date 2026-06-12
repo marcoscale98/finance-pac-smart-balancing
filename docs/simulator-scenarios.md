@@ -2,9 +2,9 @@
 
 Quattro scenari di riferimento per il **Simulatore**, scelti per coprire casi diversi del **Problema Fineco**. Tutti partono da **Portafoglio** vuoto e usano la griglia α default `[0.25, 0.50, 0.75]`.
 
-## Scenario 1 — "Marco" (caso reale)
+## Scenario 1 — "Portafoglio bilanciato 4 ETF"
 
-Configurazione attuale del portafoglio personale di Marco. Serve a validare l'algoritmo sul caso d'uso primario.
+Portafoglio bilanciato con azionario globale e Gold. Serve a validare l'algoritmo sul caso d'uso primario.
 
 | Strumento | Ticker | Peso Target |
 |---|---|---|
@@ -17,9 +17,9 @@ Configurazione attuale del portafoglio personale di Marco. Serve a validare l'al
 - **Durata**: 3 anni
 - **Caratteristica**: 4 strumenti, Quote tutte relativamente economiche
 
-## Scenario 2 — "Marco con Gold costoso"
+## Scenario 2 — "Gold costoso"
 
-Variante dello Scenario 1 in cui il **Gold** è sostituito con `SGLD.MI` (Invesco Physical Gold), con **Quota** più cara di `GBSE.MI`. Stesso portafoglio e stessi pesi target, ma il vincolo "10% in Gold" diventa molto più difficile da rispettare nelle prime **Iterazioni** → stress sul **Problema Fineco** con la composizione reale di Marco.
+Variante dello Scenario 1 in cui il **Gold** è sostituito con `SGLD.MI` (Invesco Physical Gold), con **Quota** più cara di `GBSE.MI`. Stesso portafoglio e stessi pesi target, ma il vincolo "10% in Gold" diventa molto più difficile da rispettare nelle prime **Iterazioni** → stress sul **Problema Fineco**.
 
 | Strumento | Ticker | Peso Target |
 |---|---|---|
