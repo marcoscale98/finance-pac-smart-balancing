@@ -22,8 +22,9 @@ dist/
 
 output/
 data/
-immagini-simulazioni/Screenshot 2026-05-26 alle 12.53.38.png
-immagini-simulazioni/Screenshot 2026-05-28 alle 10.53.08.png
+immagini-simulazioni/*
+!immagini-simulazioni/scenario-storico-2025-budget-non-speso-perc.png
+!immagini-simulazioni/scenario-storico-2025-deviazione-target-perc.png
 .claude/worktree/
 
 # Scenari personali (dati finanziari reali, non versionati)
