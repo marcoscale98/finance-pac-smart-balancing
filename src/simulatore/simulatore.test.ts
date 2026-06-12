@@ -260,6 +260,31 @@ describe("simula", () => {
     });
   });
 
+  it("budgetNonSpesoPercentuale: è budgetNonSpeso / budgetMese * 100", async () => {
+    // Strumento a 60€, budget 100€ → acquista 1 quota (60€), avanza 40€
+    // budgetNonSpesoPercentuale = 40 / 100 * 100 = 40%
+    const prezziPerDateMock = vi.fn().mockImplementation(
+      async (_ticker: string, date: Date[]): Promise<Quotazione[]> =>
+        date.map((d) => ({ data: d, prezzo: 60 })),
+    );
+
+    const scenario: ScenarioSimulazione = {
+      portafoglioIniziale: [
+        { ticker: "A", prezzoCorrente: 60, quoteAttuali: 0, pesoTarget: 1 },
+      ],
+      budget: 100,
+      durataInMesi: 1,
+      grigliaDiAlfa: [0],
+      dataInizio: new Date("2024-01-15"),
+    };
+
+    const risultato = await simula(scenario, prezziPerDateMock);
+    const metrica = risultato.serieAlfa[0]!.mesi[0]!;
+
+    expect(metrica.budgetNonSpeso).toBeCloseTo(40);
+    expect(metrica.budgetNonSpesoPercentuale).toBeCloseTo(40);
+  });
+
   it("senza acquisizioniFineco: serieFineco è undefined", async () => {
     const prezziPerDateMock = vi.fn().mockImplementation(
       async (_ticker: string, date: Date[]): Promise<Quotazione[]> =>

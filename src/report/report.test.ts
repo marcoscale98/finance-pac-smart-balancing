@@ -13,6 +13,7 @@ const puntoInizio: MetricaMensile = {
   spesaCumulativa: 0,
   budgetTeoricoConsumato: 0,
   budgetNonSpeso: 0,
+  budgetNonSpesoPercentuale: 0,
   deviazioneMedia: 10,
   deviazioneMediaPercentuale: 0.02,
 };
@@ -24,6 +25,7 @@ const metriche1mese: MetricaMensile[] = [
     spesaCumulativa: 100,
     budgetTeoricoConsumato: 100,
     budgetNonSpeso: 0,
+    budgetNonSpesoPercentuale: 0,
     deviazioneMedia: 0,
     deviazioneMediaPercentuale: 0,
   },
@@ -57,16 +59,22 @@ describe("buildHtml — puntoInizio", () => {
 });
 
 describe("buildHtml — dataset Fineco", () => {
-  it("con serieFineco: tutti e 5 i grafici contengono dataset con label Fineco e colore #000000", () => {
+  it("con serieFineco: tutti e 6 i grafici contengono dataset con label Fineco e colore #000000", () => {
     const html = buildHtml(resultConFineco);
 
-    // Fineco deve apparire come label in 5 dataset (uno per grafico)
+    // Fineco deve apparire come label in 6 dataset (uno per grafico)
     const matchLabel = html.match(/"label":"Fineco"/g);
-    expect(matchLabel).toHaveLength(5);
+    expect(matchLabel).toHaveLength(6);
 
-    // Il colore nero deve apparire in tutti e 5 i dataset Fineco
+    // Il colore nero deve apparire in tutti e 6 i dataset Fineco
     const matchColore = html.match(/"borderColor":"#000000"/g);
-    expect(matchColore).toHaveLength(5);
+    expect(matchColore).toHaveLength(6);
+  });
+
+  it("il grafico g3p è presente nell'HTML con etichetta asse Y '%'", () => {
+    const html = buildHtml(resultSenzaFineco);
+    expect(html).toContain('id="g3p"');
+    expect(html).toContain("Budget non speso per mese (%)");
   });
 
   it("senza serieFineco: il report non contiene dataset Fineco", () => {

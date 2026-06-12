@@ -17,6 +17,7 @@ export interface MetricaMensile {
   spesaCumulativa: number;
   budgetTeoricoConsumato: number;
   budgetNonSpeso: number;
+  budgetNonSpesoPercentuale: number;
   deviazioneMedia: number;
   deviazioneMediaPercentuale: number;
 }
@@ -106,6 +107,7 @@ async function simulaSerie(
       spesaCumulativa,
       budgetTeoricoConsumato,
       budgetNonSpeso: output.budgetNonSpeso,
+      budgetNonSpesoPercentuale: budgetMese > 0 ? (output.budgetNonSpeso / budgetMese) * 100 : 0,
       deviazioneMedia: output.deviazione / portafoglio.length,
       deviazioneMediaPercentuale: valorePortafoglio > 0
         ? (output.deviazione / valorePortafoglio) / portafoglio.length
@@ -175,6 +177,7 @@ async function simulaFineco(
       spesaCumulativa,
       budgetTeoricoConsumato,
       budgetNonSpeso: Math.max(0, budgetMese - spesaMese),
+      budgetNonSpesoPercentuale: budgetMese > 0 ? (Math.max(0, budgetMese - spesaMese) / budgetMese) * 100 : 0,
       deviazioneMedia: deviazione / portafoglio.length,
       deviazioneMediaPercentuale: valorePortafoglio > 0
         ? (deviazione / valorePortafoglio) / portafoglio.length
@@ -218,6 +221,7 @@ async function calcolaPuntoInizio(
     spesaCumulativa: 0,
     budgetTeoricoConsumato: 0,
     budgetNonSpeso: 0,
+    budgetNonSpesoPercentuale: 0,
     deviazioneMedia: portafoglio.length > 0 ? deviazione / portafoglio.length : 0,
     deviazioneMediaPercentuale: valorePortafoglio > 0
       ? (deviazione / valorePortafoglio) / portafoglio.length

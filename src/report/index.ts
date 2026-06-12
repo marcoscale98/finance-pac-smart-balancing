@@ -143,6 +143,20 @@ function buildHtml(result: SimulationResult): string {
     ...(dsFinecoBudgetNonSpeso ? [dsFinecoBudgetNonSpeso] : []),
   ].join(",\n");
 
+  // Grafico 3p: Budget non speso mensile (%)
+  const dsBudgetNonSpesoPerc = [
+    ...serieAlfa.map((serie, i) =>
+      dataset(
+        `α = ${serie.alfa}`,
+        conInizio(serie.mesi.map((m) => round2(m.budgetNonSpesoPercentuale)), puntoInizio.budgetNonSpesoPercentuale),
+        COLORI[i % COLORI.length]!,
+      ),
+    ),
+    ...(serieFineco
+      ? [dataset("Fineco", conInizio(serieFineco.map((m) => round2(m.budgetNonSpesoPercentuale)), puntoInizio.budgetNonSpesoPercentuale), "#000000")]
+      : []),
+  ].join(",\n");
+
   // Grafico 4: Deviazione media in euro
   const dsDeviazione = [
     ...serieAlfa.map((serie, i) =>
@@ -205,6 +219,7 @@ function buildHtml(result: SimulationResult): string {
   ${grafico("g1", "Valore del portafoglio nel tempo", dsValore, "€")}
   ${grafico("g2", "Budget cumulativo: teorico vs speso", dsBudget, "€")}
   ${grafico("g3", "Budget non speso per mese", dsBudgetNonSpeso, "€")}
+  ${grafico("g3p", "Budget non speso per mese (%)", dsBudgetNonSpesoPerc, "%")}
   ${grafico("g4", "Deviazione media dai target nel tempo (€)", dsDeviazione, "€ (media per strumento)", "Scostamento medio in euro tra il Valore Finale e il Valore Target di ciascuno strumento. Il Valore Target è la quota del portafoglio che lo strumento dovrebbe occupare secondo l'Allocazione Target (es. 40% World, 30% S&amp;P500…).")}
   ${grafico("g5", "Deviazione media dai target nel tempo (%)", dsDeviazionePerc, "% (media per strumento)", "Stesso scostamento del grafico precedente, espresso in punti percentuali rispetto al valore totale del portafoglio — equivale alla differenza media tra Peso Finale e Peso Target di ciascuno strumento.")}
 </body>
