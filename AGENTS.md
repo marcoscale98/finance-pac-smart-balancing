@@ -19,8 +19,10 @@ npx skills experimental_install
 npm test               # esegui test suite (Vitest)
 npm run test:watch     # test in watch mode
 npm run typecheck      # tsc --noEmit
-npm run iterazione <scenario> # esegui una Iterazione su un file scenario JSON (es. scenarios/scenario1.json)
-npm run simulazione:all   # simula tutti e 4 gli scenari e genera HTML in output/
+npm run iterazione <scenario>   # esegui una Iterazione su un file scenario JSON (es. scenarios/scenario1.json)
+npm run simulazione <scenario>  # simula un singolo scenario (HTML in output/)
+npm run simulazione:all         # simula tutti gli scenari in scenarios/ (HTML in output/)
+npm run listino <ticker>        # stampa la data di quotazione di un ticker (Yahoo Finance)
 ```
 
 Per eseguire un singolo file di test:
@@ -47,7 +49,9 @@ Costo = (1 − α) * U + α * D_€
 - **`src/simulatore/`** — simula N iterazioni mensili consecutive per una griglia di valori α, accumulando metriche di portafoglio.
 - **`src/report/`** — genera HTML con 3 grafici Chart.js a partire dal `SimulationResult` del simulatore.
 - **`src/scenarios/`** — parser JSON per scenari completi (con `durataInMesi`, `grigliaDiAlfa`, `dataInizio`).
-- **`src/simula-tutti.ts`** — script batch che esegue i 4 scenari in `scenarios/` e scrive gli HTML in `output/`.
+- **`src/storico-fineco/`** — confronto con il PAC Smart di Fineco su iterazioni reali (base per il claim "98% vs 63%" del README, scenario `scenario-storico-2025.json`).
+- **`src/simula.ts`** — entry point CLI per la simulazione: con `--all` esegue tutti gli scenari in `scenarios/`, altrimenti uno singolo.
+- **`src/data-inizio-listino.ts`** — utility (`npm run listino`) per verificare su Yahoo Finance la data di quotazione di un ticker prima di inserirlo in uno scenario.
 
 ### Flusso dati
 
