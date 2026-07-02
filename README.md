@@ -36,3 +36,7 @@ npm run simulazione:all                       # simula tutti gli scenari, HTML i
 ## Architettura
 
 Vedi [`AGENTS.md`](AGENTS.md) e [`docs/adr/`](docs/adr/).
+
+## Licenza
+
+[PolyForm Noncommercial 1.0.0](LICENSE) — uso libero per scopi non commerciali.
